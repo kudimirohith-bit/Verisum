@@ -1,0 +1,23 @@
+{
+  "name": "verisumm-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VeriSumm - Safety-first clinical & biomedical text summarization platform",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "worker",
+    "libs/common"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:worker": "npm run dev --workspace=worker",
+    "build:all": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  }
+}
