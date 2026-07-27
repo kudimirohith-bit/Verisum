@@ -61,3 +61,43 @@
   - AuditLog: create + invalid eventType rejection
 - **Result: 11/11 tests passing** ✅
 - Note: `MONGOMS_SYSTEM_BINARY` env var set in `npm test` script to use cached Fedora 43-compatible MongoDB 7.0.24 binary.
+
+---
+
+### [2026-07-27] Chunk 0.3 — Authentication & Access Control
+
+#### Auth Module Created (`backend/src/auth/`)
+| File | Purpose |
+|---|---|
+| `tokens.ts` | `signAccessToken()` (15m), `signRefreshToken()` (7d), `verifyToken()` using `jsonwebtoken` + `JWT_SECRET` |
+| `middleware.ts` | `requireAuth` (validates `Authorization: Bearer` JWT, attaches `req.user`); `requireRole(...roles)` factory (returns 403 on role mismatch) |
+| `audit.ts` | `logEvent()` stub — writes `AuditLog` entries, non-fatal on failure; hook in place for 0.9 pipeline |
+| `router.ts` | Full auth Express router (see endpoints below) |
+| `index.ts` | Barrel re-export |
+
+#### Endpoints Implemented
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/auth/register` | Public | Creates researcher account; role locked to `researcher` |
+| `POST` | `/auth/admin/create-user` | Admin-only | Creates any role (clinician/researcher/admin) |
+| `POST` | `/auth/login` | Public | Returns `accessToken` JSON + `refreshToken` httpOnly cookie |
+| `POST` | `/auth/refresh` | Cookie | Issues new access token from valid refresh cookie |
+| `POST` | `/auth/logout` | Public | Clears refresh cookie |
+| `GET` | `/auth/me` | requireAuth | Returns authenticated user profile (no passwordHash) |
+| `GET` | `/auth/admin/users` | Admin-only | Lists all users |
+
+#### Security Design Decisions
+- bcrypt cost factor = **12** for production; tests use cost = **1** for speed
+- Refresh token stored as **httpOnly, sameSite=strict** cookie scoped to `/auth/refresh`
+- Wrong password response uses constant-time bcrypt compare to **prevent user enumeration**
+- Express app split into `app.ts` (pure Express, no DB call) and `index.ts` (connects DB + calls listen) to allow Supertest imports without double-connect errors
+
+#### Tests — `backend/tests/auth.test.ts` (16 tests, all passing)
+- Register: success, duplicate email (409), weak password (400)
+- Login: correct credentials, wrong password (401), non-existent user (401)
+- /me: valid token, no token (401), expired token (401 + `TokenExpired`), tampered token (401)
+- RBAC: admin allowed, researcher → 403, clinician → 403
+- Refresh: no cookie (401), valid cookie, expired refresh (401 + `TokenExpired`)
+
+**Total test suite: 27/27 passing ✅** (11 model tests + 16 auth tests)
+
