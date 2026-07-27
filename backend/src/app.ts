@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { authRouter } from './auth/index.js';
+import { ingestionRouter } from './ingestion/index.js';
 
 dotenv.config();
 
@@ -19,5 +20,6 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/auth', authRouter);
+app.use('/documents', ingestionRouter);
 
 export { app };

@@ -101,3 +101,56 @@
 
 **Total test suite: 27/27 passing ✅** (11 model tests + 16 auth tests)
 
+---
+
+### [2026-07-27] Chunk 0.4 — Document Ingestion & De-identification
+
+#### De-identification Module (`backend/src/deid/index.ts`)
+Two-pass pipeline:
+
+| Pass | Where | What it catches |
+|---|---|---|
+| **Regex pass** (always runs) | Node.js | MRN, SSN, phone, dates (6 patterns), ages, emails, ZIP codes, IP addresses, URLs, patient IDs, room/bed numbers — 14 rule categories total |
+| **NER pass** (optional) | `model-service` HTTP `/deid/ner` | PERSON, LOCATION, ORGANIZATION via Python `re` stub (spaCy/Presidio in later chunk) |
+
+- NER call has a 5-second timeout; any network failure silently falls back to regex-only (non-fatal by design)
+- Returns `{ deidentifiedText, phiMatchCount, matchedTags }` for both audit logging and response metadata
+
+#### Text Extraction (`backend/src/ingestion/extractor.ts`)
+| Format | Library | Notes |
+|---|---|---|
+| `.txt` | Buffer → UTF-8 | Direct read |
+| `.pdf` | `pdf-parse` | Errors on image-only PDFs |
+| `.docx` | `mammoth` | Extracts raw text, ignores formatting |
+- Max file size: 10 MB enforced at multer layer
+
+#### Ingestion Router (`backend/src/ingestion/router.ts`)
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/documents` | `clinician`/`researcher`/`admin` | Multipart file **or** pasted JSON `rawText`; always stores de-identified text only |
+| `GET` | `/documents` | Any auth | Lists caller's documents (admin sees all); `rawText` excluded from list response |
+| `GET` | `/documents/:id` | Owner or admin | Returns de-identified text; admin `?raw-view=true` emits audited log entry |
+
+**PHI never touches disk** — multer uses `memoryStorage()` only; raw buffer is discarded after extraction + de-identification.
+
+#### Model-service NER Endpoint (`model-service/main.py`)
+- `POST /deid/ner` — accepts `{ text }`, returns `{ entities, deidentified_text }`
+- Current implementation: Python `re`-based stub for PERSON / LOCATION / ORGANIZATION
+- spaCy + Microsoft Presidio integration planned for a later chunk
+
+#### Tests — `backend/tests/ingestion.test.ts` (16 tests)
+**5 synthetic PHI recall tests (unit):**
+- Note 1: MRN `8834521`, SSN `123-45-6789`, DOB `03/15/1978`, phone `(555) 234-7890` → all redacted ✅
+- Note 2: Admission date, discharge date, email `john.smith@email.com`, ZIP `94103` → all redacted ✅
+- Note 3: Patient ID `4492871`, age `67-year-old`, URL `https://pacs.hospital.internal/...` → all redacted ✅
+- Note 4: Three dates + phone in dialogue format → all redacted ✅
+- Note 5: IP `192.168.1.45`, email, two dates in biomedical excerpt → all redacted ✅
+- Clean text baseline: `phiMatchCount = 0` ✅
+
+**API integration tests (10):**
+- Clinician/researcher text upload, unauthenticated 401, missing `docType` 400, missing body 400
+- `.txt` file upload via multipart
+- GET: owner access, non-owner 403, admin access, 404 for unknown ID
+
+**Total test suite: 43/43 passing ✅** (11 model + 16 auth + 16 ingestion)
+
