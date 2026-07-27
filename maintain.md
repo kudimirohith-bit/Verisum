@@ -14,37 +14,50 @@
 #### Monorepo Architecture & Package Management
 - Configured root `package.json` with npm workspaces (`backend`, `frontend`, `worker`, `libs/common`).
 - Implemented `@verisumm/common` shared library containing TypeScript interfaces (`SummarizationJobPayload`, `SummarizationJobResult`), constants (`QUEUE_NAMES`), and status definitions.
-- Created root `.gitignore` and `.env.example` pre-declaring all environment variables (`MONGO_URI`, `REDIS_URL`, `JWT_SECRET`, `MODEL_SERVICE_URL`, `HOSTED_LLM_API_KEY`, `DEPLOYMENT_MODE`, etc.).
+- Created root `.gitignore` and `.env.example` pre-declaring all environment variables.
 
 #### Service Implementation Breakdown
-1. **Backend Service (`backend/`)**:
-   - Express + TypeScript API structure.
-   - Pre-declared dependencies: `mongoose`, `zod`, `jsonwebtoken`, `bcryptjs`, `bullmq`, `ioredis`.
-   - `GET /health` endpoint returning `{"status": "ok"}`.
-   - Added `tsconfig.json`, `.eslintrc.json`, `.prettierrc`, and `Dockerfile`.
-2. **Frontend Service (`frontend/`)**:
-   - React + Vite + TypeScript application.
-   - Tailwind CSS pre-configured with modern dark-mode aesthetic theme.
-   - Scaffolded `react-router-dom` and Axios API client wrapper (`src/api/client.ts`).
-   - Created "VeriSumm" landing page component displaying live service health status badges.
-   - Configured `tsconfig.json`, `vite.config.ts`, `tailwind.config.js`, `postcss.config.js`, `vite-env.d.ts`, and `Dockerfile`.
-3. **Worker Service (`worker/`)**:
-   - Node.js + TypeScript background process.
-   - Connected to `@verisumm/common` shared workspace.
-   - Pre-configured with `bullmq` and `ioredis`.
-   - Added `tsconfig.json`, `.eslintrc.json`, and `Dockerfile`.
-4. **Model Microservice (`model-service/`)**:
-   - Python + FastAPI microservice isolated for local Hugging Face transformer model inference.
-   - Endpoint `GET /health` returning `{"status": "ok"}`.
-   - `requirements.txt` (`fastapi`, `uvicorn`, `pydantic`), `main.py`, and `Dockerfile`.
-5. **Infrastructure (`infra/docker-compose.yml`)**:
-   - Scaffolded 6 services: `backend`, `frontend`, `worker`, `model-service`, `mongo`, `redis`.
-   - Configured container healthchecks for all services.
-6. **Documentation & Tests**:
-   - Created top-level `README.md` explaining VeriSumm architecture, repo layout, and `docker compose up` instructions.
-   - Created `docs/architecture.md` with Mermaid diagram depicting the data pipeline flow (`React Client -> Express API -> BullMQ Queue -> Worker -> Model-Service / Hosted LLM -> MongoDB`).
-   - Created `tests/README.md` placeholder.
+1. **Backend Service (`backend/`)**: Express + TypeScript API, pre-declared deps, `GET /health`, `tsconfig.json`, `.eslintrc.json`, `.prettierrc`, Dockerfile.
+2. **Frontend Service (`frontend/`)**: React + Vite + TypeScript, Tailwind CSS, `react-router-dom`, Axios client wrapper, VeriSumm landing page, Dockerfile.
+3. **Worker Service (`worker/`)**: Node.js + TypeScript, connected to `@verisumm/common`, Dockerfile.
+4. **Model Microservice (`model-service/`)**: Python + FastAPI, `/health` endpoint, Dockerfile.
+5. **Infrastructure (`infra/docker-compose.yml`)**: 6 services with healthchecks.
+6. **Docs**: `README.md`, `docs/architecture.md` with Mermaid diagram.
 
-#### Verification
-- Ran TypeScript compilation across all workspaces (`@verisumm/common`, `backend`, `worker`, `frontend`) — 0 errors.
-- Checked Python syntax for `model-service/main.py` — 0 errors.
+---
+
+### [2026-07-27] Chunk 0.2 — Core Data Models (Mongoose Schemas)
+
+#### Mongoose Models Created (`backend/src/models/`)
+| Model | Key Fields | Indexes |
+|---|---|---|
+| `User` | email (unique), role enum, passwordHash | Unique on `email` (via `unique: true` field flag) |
+| `Document` | ownerId (ref User), docType enum, rawText, phiStatus, collectionId (nullable) | Index on `ownerId` |
+| `SummarizationJob` | documentIds (array ref Document), modelBackend, status enum, completedAt | Index on `status` |
+| `Summary` | jobId (ref SummarizationJob), summaryText, tokenCount, automaticMetrics (Mixed), consistencyScore (nullable), flaggedClaims (sub-docs) | None |
+| `ClinicianFeedback` | summaryId (ref Summary), reviewerId (ref User), 3x rating fields (1-5), comment | None |
+| `AuditLog` | eventType enum, actorId (nullable), documentId (nullable), jobId (nullable), payload (Mixed) | Compound on `eventType + createdAt` |
+
+#### Zod Schemas Created (`backend/src/schemas/`)
+- `user.schema.ts`, `document.schema.ts`, `summarizationJob.schema.ts`, `summary.schema.ts`, `clinicianFeedback.schema.ts`, `auditLog.schema.ts`, `index.ts` (barrel)
+
+#### Database Connection
+- Created `backend/src/lib/db.ts` — reusable `connectDB()` / `disconnectDB()` functions.
+- Updated `backend/src/index.ts` to connect MongoDB before starting Express.
+
+#### Seed Script
+- Created `backend/scripts/seedDemoData.ts` — `npm run seed` inserts:
+  - 1 admin user (`admin@verisumm.io`)
+  - 1 clinician user (`clinician@verisumm.io`)
+  - 1 de-identified `discharge_summary` document
+
+#### Tests
+- Created `backend/tests/models.test.ts` — Jest + `mongodb-memory-server` (11 tests):
+  - User: create, unique email, invalid role rejection
+  - Document: create + `ownerId` population
+  - SummarizationJob: create + `documentIds` population
+  - Summary: create + `jobId` population
+  - ClinicianFeedback: create + multi-ref population + out-of-range rating rejection
+  - AuditLog: create + invalid eventType rejection
+- **Result: 11/11 tests passing** ✅
+- Note: `MONGOMS_SYSTEM_BINARY` env var set in `npm test` script to use cached Fedora 43-compatible MongoDB 7.0.24 binary.
