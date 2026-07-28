@@ -10,7 +10,10 @@
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "seed": "ts-node-dev --transpile-only scripts/seedDemoData.ts",
-    "test": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 jest --runInBand"
+    "build:test": "tsc -p tsconfig.jest.json",
+    "test": "npm run build:test && npm run test:unit && npm run test:integration",
+    "test:unit": "node --max-old-space-size=256 dist-test/tests/chunking.runner.js",
+    "test:integration": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 node --max-old-space-size=2048 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion'"
   },
   "dependencies": {
     "@verisumm/common": "*",
@@ -52,18 +55,9 @@
     "typescript": "^5.3.3"
   },
   "jest": {
-    "preset": "ts-jest",
     "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.ts"],
-    "transform": {
-      "^.+\\.tsx?$": ["ts-jest", {
-        "useESM": false,
-        "tsconfig": {
-          "module": "CommonJS",
-          "moduleResolution": "node"
-        }
-      }]
-    },
+    "testMatch": ["**/dist-test/tests/**/*.test.js"],
+    "testTimeout": 30000,
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     }

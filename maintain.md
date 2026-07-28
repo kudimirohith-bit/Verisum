@@ -154,3 +154,47 @@ Two-pass pipeline:
 
 **Total test suite: 43/43 passing ✅** (11 model + 16 auth + 16 ingestion)
 
+---
+
+### [2026-07-28] Chunk 0.5 — Long-Document Chunking & Hierarchical Summarization
+
+#### Files Created (`backend/src/chunking/`)
+| File | Purpose |
+|---|---|
+| `splitter.ts` | Regex-based sentence boundary detector with abbreviation protection (placeholder substitution), section-header detection, paragraph/sentence two-phase split |
+| `TextChunker.ts` | `TextChunker` class — sentence-aware, overlap-carrying, section-boundary preferring chunker with injected `countTokens` function |
+| `HierarchicalSummarizer.ts` | Map-reduce orchestrator with recursive re-chunking, multi-document support, per-chunk source tagging, intermediate summary retention |
+| `index.ts` | Barrel export |
+| `README.md` | Design doc: map-reduce strategy, tradeoffs vs RAG, config examples, convergence analysis |
+
+#### TextChunker Design
+- **Injected tokenizer**: `countTokens: (text: string) => number` — backbone-agnostic
+- **Section-boundary preference**: splits at clinical headers (`Assessment:`, `Plan:`, `Chief Complaint:`, etc.) before falling back to sentence, then paragraph
+- **Overlap**: configurable `overlapTokens` carried from previous chunk tail (prevents boundary blindness)
+- **Validation**: throws on invalid config (max ≤ 0, overlap ≥ max, negative overlap)
+- **Multi-doc**: `chunkDocuments(docs)` tags each chunk with its source `docId`
+
+#### HierarchicalSummarizer Design
+- **Map step**: summarizes each chunk independently (parallel `Promise.all`)
+- **Reduce step**: concatenates chunk-summaries → if within token limit, produce final; else re-chunk recursively
+- **Output**: `{ finalSummary, chunkSummaries[], levelsUsed, sourceDocIds[] }`
+- `chunkSummaries` preserves all intermediate levels for claim-tracing back to source spans (used in 0.7)
+
+#### Test Infrastructure Fix
+- ts-jest uses 500MB+ heap on this machine (2.7GB available) — OOM with all suites in one process
+- **Solution**: split into two separate Node processes:
+  - `test:unit` — `chunking.runner.ts` compiled to plain JS, runs with Node `assert` module, 256MB heap
+  - `test:integration` — Jest + mongodb-memory-server, models/auth/ingestion tests, 2048MB heap
+  - `build:test` — `tsc -p tsconfig.jest.json` compiles to `dist-test/` for both runners
+
+#### Tests — `backend/tests/chunking.runner.ts` (22 tests, all passing ✅)
+- Splitter: 3-sentence split, empty string, abbreviation protection (Dr./Mr.), section header preservation
+- Constructor: validation of maxTokensPerChunk/overlapTokens combos
+- Short doc: single-chunk fast path
+- **Acceptance criteria (a/b/c)**: no chunk over limit, sentence-boundary endings, ≥95% source coverage
+- Section-aware: structured clinical doc produces `sectionName` tagged chunks
+- Multi-doc: docId tagging, per-doc chunkIndex reset
+- HierarchicalSummarizer: short doc, long doc multi-level reduce, sentenceRange validity, multi-doc tagging, three-doc job
+
+**Grand total: 65 tests, 0 failures ✅** (22 unit + 43 integration)
+
