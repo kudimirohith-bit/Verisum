@@ -15,3 +15,5 @@ export type { IClinicianFeedback } from './ClinicianFeedback.js';
 
 export { AuditLogModel } from './AuditLog.js';
 export type { IAuditLog, AuditEventType } from './AuditLog.js';
+
+export type { SummarizerBackend, SummaryResult } from './SummarizerBackend.js';

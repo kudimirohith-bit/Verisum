@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { authRouter } from './auth/index.js';
 import { ingestionRouter } from './ingestion/index.js';
+import { jobsRouter } from './jobs/index.js';
 
 dotenv.config();
 
@@ -21,5 +22,6 @@ app.get('/health', (_req: Request, res: Response) => {
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/auth', authRouter);
 app.use('/documents', ingestionRouter);
+app.use('/jobs', jobsRouter);
 
 export { app };

@@ -198,3 +198,41 @@ Two-pass pipeline:
 
 **Grand total: 65 tests, 0 failures ✅** (22 unit + 43 integration)
 
+---
+
+### [2026-07-28] Chunk 0.6 — Pluggable Summarization Model Backends
+
+#### Interfaces & Backends Created (`backend/src/models/` & `backend/src/summarizer/`)
+- **`SummarizerBackend` Interface**: Defines common API for model backends:
+  - `name`: string identifier
+  - `maxContextTokens`: number
+  - `summarize(text, docType)`: returns `Promise<SummaryResult>`
+  - `countTokens(text)`: returns number
+- **`SummaryResult` Interface**: Structure for summary outputs:
+  - `summaryText`, `modelName`, `modelVersion`, `latencyMs`, `rawProviderResponse`
+- **Concrete Backend Implementations**:
+  1. `MockBackend`: Deterministic backend for tests (truncation-based).
+  2. `LocalModelServiceBackend`: HTTP client calls Python FastAPI `model-service` on `POST /summarize` (defaults to port 8000) with a 15-second timeout and robust local fallback when offline.
+  3. `HostedLLMBackend`: Calls Anthropic API (Claude) or OpenAI API (GPT) based on config, with 3x retry + exponential backoff, custom token estimator, and local fallback on exhaustion/no key.
+- **`BackendRegistry`**: Factory mapping identifiers `"mock"`, `"local"`, `"local_clinical_model"`, and `"hosted_llm"` to backend instances.
+
+#### Ingestion & Workers Wiring
+- **Jobs Router (`backend/src/jobs/router.ts`)**:
+  - `POST /jobs`: Creates a `SummarizationJob` in `queued` status, validates document IDs exist in MongoDB, enqueues onto BullMQ (`summarization-queue`), and creates an audit log.
+  - `GET /jobs/:id`: Endpoint to check job status.
+- **Queue System (`backend/src/jobs/queue.ts`)**: Configures Redis-backed BullMQ Queue using `ioredis`.
+- **Worker (`worker/src/index.ts` & `backend/src/jobs/processor.ts`)**:
+  - Worker listens to `summarization-queue` in worker process.
+  - Processor (`processSummarizationJob` located in backend to avoid cross-rootDir compilation issues) connects to MongoDB, marks job as `running`, runs `HierarchicalSummarizer` with the configuration-selected backend, persists `Summary` document (with intermediate chunk summaries stored inside `automaticMetrics`), sets job status to `verifying` (comes in 0.7), and logs a `summarize` audit log.
+
+#### Python `model-service` Summarization
+- Added `POST /summarize` to `model-service/main.py`.
+- Attempts to load Hugging Face pipeline (defaults to `google/t5-small`) once at startup; gracefully falls back to sentence-extraction heuristic if `transformers` or `torch` are not installed or fail to load.
+
+#### Tests — `backend/tests/jobs.test.ts` (3 tests, all passing)
+- Enqueues jobs and processes them inline (by mocking BullMQ queue to execute the worker processor in the same thread synchronously).
+- Verifies database status transitions, non-empty summaries, correct backend metadata recording, and audit logging.
+- Tests validation failures (empty document list, non-existent document IDs).
+
+**Grand total: 68 tests, 0 failures ✅** (22 unit + 46 integration)
+

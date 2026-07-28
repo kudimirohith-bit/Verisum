@@ -10,6 +10,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const index_js_1 = require("./auth/index.js");
 const index_js_2 = require("./ingestion/index.js");
+const index_js_3 = require("./jobs/index.js");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -23,3 +24,4 @@ app.get('/health', (_req, res) => {
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/auth', index_js_1.authRouter);
 app.use('/documents', index_js_2.ingestionRouter);
+app.use('/jobs', index_js_3.jobsRouter);
