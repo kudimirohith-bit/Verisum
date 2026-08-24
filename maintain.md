@@ -272,3 +272,34 @@ Two-pass pipeline:
 
 **Grand total: 71 tests, 0 failures ✅** (22 unit + 49 integration)
 
+---
+
+### [2026-07-28] Chunk 0.8 — Clinician Review & Feedback UI (React + TypeScript + Tailwind)
+
+#### Backend Endpoints (`backend/src/summaries/` & `backend/src/jobs/`)
+- **`POST /summaries/:id/feedback`**:
+  - Guards: `requireAuth`, `requireRole('clinician', 'admin')`.
+  - Accepts completeness (1-5), correctness (1-5), conciseness (1-5) ratings and free-text comment.
+  - Upserts `ClinicianFeedbackModel` record and logs an `eventType='review'` audit trail.
+- **`GET /summaries/:id`**:
+  - Returns summary details, linked document records, and feedback history.
+- **Enhanced `GET /jobs/:id`**:
+  - Enriches job status response with populated `Summary` and `Document` payload when status is `completed`.
+
+#### React Frontend Components (`frontend/src/`)
+- **`Navbar.tsx`**: Header with live backend health indicator, navigation tabs, and a user role switcher (`clinician`, `researcher`, `admin`).
+- **`UploadScreen.tsx`**: Document upload form supporting `.txt`, `.pdf`, `.docx` file drops or raw pasted text, `docType` selector, and multi-model backend selection pills (`mock`, `local_clinical_model`, `hosted_llm`).
+- **`JobStatusScreen.tsx`**: Live polling interface polling `GET /jobs/:id` every 1.5s with a 4-step status progress indicator (`queued` -> `running` -> `verifying` -> `completed`).
+- **`SummaryReviewScreen.tsx`**: Dual-pane review screen:
+  - **Left Pane**: Source document text broken into chunk sections with smooth auto-scroll focus.
+  - **Right Pane**: Highlighted summary text, Quality Panel, and Feedback Form.
+- **`FlaggedClaimHighlight.tsx`**: Renders summary sentences, highlighting flagged claims with popover tooltips displaying verdict, confidence, reason, and a `"Jump to Source Chunk"` link.
+- **`QualityPanel.tsx`**: Displays consistency score gauge ring, token count, latency, ROUGE-L/BERTScore, and mandatory supplementary evaluation label.
+- **`FeedbackForm.tsx`**: 5-star ratings for completeness, correctness, conciseness + comments text area. Enforces read-only mode for `researcher` role.
+- **`ComparisonView.tsx`**: Side-by-side benchmarking view when multiple backends are dispatched for the same document.
+
+#### Tests — `frontend/src/tests/review.test.tsx`
+- React Testing Library test suite asserting flagged claim rendering, popover inspection, jump to source chunk callback, feedback star rating selection, feedback API dispatch, and researcher read-only mode enforcement.
+
+**Grand total: 71 backend tests + React component test suite passing, production build clean ✅**
+

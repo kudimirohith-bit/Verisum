@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { authRouter } from './auth/index.js';
 import { ingestionRouter } from './ingestion/index.js';
 import { jobsRouter } from './jobs/index.js';
+import { summariesRouter } from './summaries/index.js';
 
 dotenv.config();
 
@@ -23,5 +24,6 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/auth', authRouter);
 app.use('/documents', ingestionRouter);
 app.use('/jobs', jobsRouter);
+app.use('/summaries', summariesRouter);
 
 export { app };

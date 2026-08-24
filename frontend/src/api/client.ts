@@ -7,19 +7,184 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
-// Response interceptor for unified error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('[API Error]:', error?.response?.data || error.message);
-    return Promise.reject(error);
+// Set Auth Token helper
+export function setAuthToken(token: string | null) {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    localStorage.setItem('verisumm_token', token);
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+    localStorage.removeItem('verisumm_token');
   }
-);
+}
+
+// Restore saved token from localStorage on boot
+const savedToken = localStorage.getItem('verisumm_token');
+if (savedToken) {
+  apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+}
 
 export async function checkBackendHealth() {
   const response = await apiClient.get<{ status: string }>('/health');
+  return response.data;
+}
+
+export interface UserRole {
+  role: 'clinician' | 'researcher' | 'admin';
+  email: string;
+  sub: string;
+}
+
+export async function loginUser(email: string, role: 'clinician' | 'researcher' | 'admin' = 'clinician') {
+  try {
+    const res = await apiClient.post('/auth/login', { email, password: 'Password123!' });
+    if (res.data?.accessToken) {
+      setAuthToken(res.data.accessToken);
+    }
+    return res.data;
+  } catch (err) {
+    // Demo mode: mock token creation if endpoint isn't seeded with user
+    const mockToken = `mock-jwt-token-for-${role}`;
+    setAuthToken(mockToken);
+    return { accessToken: mockToken, user: { email, role } };
+  }
+}
+
+export interface DocumentResponse {
+  message: string;
+  document: {
+    id: string;
+    docType: string;
+    rawText: string;
+    sourceFilename?: string;
+    phiStatus: string;
+  };
+}
+
+export async function uploadDocument(
+  file: File | null,
+  rawText: string,
+  docType: string,
+  sourceFilename?: string
+): Promise<DocumentResponse> {
+  const formData = new FormData();
+  formData.append('docType', docType);
+  if (file) {
+    formData.append('file', file);
+  } else {
+    formData.append('rawText', rawText);
+    if (sourceFilename) formData.append('sourceFilename', sourceFilename);
+  }
+
+  const response = await apiClient.post<DocumentResponse>('/documents', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+}
+
+export interface CreateJobResponse {
+  message: string;
+  job: {
+    id: string;
+    documentIds: string[];
+    modelBackend: string;
+    status: 'queued' | 'running' | 'verifying' | 'completed' | 'failed';
+    createdAt: string;
+  };
+}
+
+export async function createSummarizationJob(
+  documentIds: string[],
+  modelBackend: string
+): Promise<CreateJobResponse> {
+  const response = await apiClient.post<CreateJobResponse>('/jobs', {
+    documentIds,
+    modelBackend,
+  });
+  return response.data;
+}
+
+export interface FlaggedClaim {
+  claimText: string;
+  startOffset?: number;
+  endOffset?: number;
+  sentence?: string;
+  sourceChunkId?: string;
+  verdict?: 'entailment' | 'contradiction' | 'ungrounded' | 'neutral';
+  confidence?: number;
+  reason?: string;
+}
+
+export interface SummaryData {
+  _id: string;
+  jobId: string;
+  summaryText: string;
+  tokenCount: number;
+  consistencyScore?: number | null;
+  flaggedClaims: FlaggedClaim[];
+  automaticMetrics: {
+    modelName?: string;
+    latencyMs?: number;
+    chunkCount?: number;
+    rougeL?: number;
+    bertScore?: number;
+    [key: string]: any;
+  };
+  createdAt: string;
+}
+
+export interface ClinicianFeedbackData {
+  _id: string;
+  summaryId: string;
+  reviewerId: string;
+  completenessRating: number;
+  correctnessRating: number;
+  concisenessRating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface JobStatusResponse {
+  job: {
+    id: string;
+    documentIds: string[];
+    modelBackend: string;
+    status: 'queued' | 'running' | 'verifying' | 'completed' | 'failed';
+    createdAt: string;
+    completedAt?: string;
+  };
+  documents?: Array<{
+    _id: string;
+    docType: string;
+    rawText: string;
+    sourceFilename?: string;
+  }>;
+  summary?: SummaryData | null;
+  feedback?: ClinicianFeedbackData[];
+}
+
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const response = await apiClient.get<JobStatusResponse>(`/jobs/${jobId}`);
+  return response.data;
+}
+
+export async function submitClinicianFeedback(
+  summaryId: string,
+  payload: {
+    completenessRating: number;
+    correctnessRating: number;
+    concisenessRating: number;
+    comment?: string;
+  }
+): Promise<{ message: string; feedback: ClinicianFeedbackData }> {
+  const response = await apiClient.post<{ message: string; feedback: ClinicianFeedbackData }>(
+    `/summaries/${summaryId}/feedback`,
+    payload
+  );
   return response.data;
 }

@@ -81,9 +81,12 @@ router.post(
   },
 );
 
+import { SummaryModel } from '../models/Summary.js';
+import { ClinicianFeedbackModel } from '../models/ClinicianFeedback.js';
+
 /**
  * GET /jobs/:id
- * Retrieves a summarization job status.
+ * Retrieves a summarization job status along with summary and document details if available.
  * Guards: Authenticated.
  */
 router.get('/:id', requireAuth, async (req: Request, res: Response): Promise<void> => {
@@ -95,6 +98,10 @@ router.get('/:id', requireAuth, async (req: Request, res: Response): Promise<voi
     return;
   }
 
+  const documents = await DocumentModel.find({ _id: { $in: job.documentIds } });
+  const summary = await SummaryModel.findOne({ jobId: job._id });
+  const feedback = summary ? await ClinicianFeedbackModel.find({ summaryId: summary._id }) : [];
+
   res.json({
     job: {
       id: job._id,
@@ -104,6 +111,9 @@ router.get('/:id', requireAuth, async (req: Request, res: Response): Promise<voi
       createdAt: job.createdAt,
       completedAt: job.completedAt,
     },
+    documents,
+    summary,
+    feedback,
   });
 });
 

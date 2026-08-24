@@ -14,10 +14,15 @@
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:worker": "npm run dev --workspace=worker",
     "build:all": "npm run build --workspaces --if-present",
+    "test:frontend": "npm run test --workspace=frontend",
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.1",
+    "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^1.3.1"
   }
 }

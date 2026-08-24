@@ -72,9 +72,11 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         },
     });
 });
+const Summary_js_1 = require("../models/Summary.js");
+const ClinicianFeedback_js_1 = require("../models/ClinicianFeedback.js");
 /**
  * GET /jobs/:id
- * Retrieves a summarization job status.
+ * Retrieves a summarization job status along with summary and document details if available.
  * Guards: Authenticated.
  */
 router.get('/:id', middleware_js_1.requireAuth, async (req, res) => {
@@ -84,6 +86,9 @@ router.get('/:id', middleware_js_1.requireAuth, async (req, res) => {
         res.status(404).json({ error: 'NotFound', message: 'Job not found.' });
         return;
     }
+    const documents = await Document_js_1.DocumentModel.find({ _id: { $in: job.documentIds } });
+    const summary = await Summary_js_1.SummaryModel.findOne({ jobId: job._id });
+    const feedback = summary ? await ClinicianFeedback_js_1.ClinicianFeedbackModel.find({ summaryId: summary._id }) : [];
     res.json({
         job: {
             id: job._id,
@@ -93,5 +98,8 @@ router.get('/:id', middleware_js_1.requireAuth, async (req, res) => {
             createdAt: job.createdAt,
             completedAt: job.completedAt,
         },
+        documents,
+        summary,
+        feedback,
     });
 });
