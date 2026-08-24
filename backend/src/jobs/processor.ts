@@ -4,6 +4,7 @@ import { SummaryModel } from '../models/Summary.js';
 import { AuditLogModel } from '../models/AuditLog.js';
 import { BackendRegistry } from '../summarizer/backends.js';
 import { HierarchicalSummarizer } from '../chunking/HierarchicalSummarizer.js';
+import { VerificationPipeline } from '../verification/index.js';
 
 export async function processSummarizationJob(jobId: string): Promise<any> {
   console.log(`[Worker Processor] Starting job ${jobId}`);
@@ -52,7 +53,7 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
     const result = await summarizer.summarizeDocuments(chunkableDocs, docType);
     const totalLatency = Date.now() - start;
 
-    // 6. Persist the Summary document
+    // 6. Persist the initial Summary document
     const summary = await SummaryModel.create({
       jobId: job._id,
       summaryText: result.finalSummary,
@@ -68,18 +69,32 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
       flaggedClaims: [],
     });
 
-    // 7. Update job status to verifying
+    // 7. Update job status to verifying while verification module executes
     job.status = 'verifying';
+    await job.save();
+
+    // 8. Run Verification Pipeline (0.7 Factual Consistency & Hallucination Detection)
+    const pipeline = new VerificationPipeline();
+    const sourceChunks = chunkableDocs.map((d) => ({ id: d.id, text: d.text }));
+    const verificationResult = await pipeline.verify(result.finalSummary, sourceChunks, docType);
+
+    // Update Summary with verification metrics
+    summary.consistencyScore = verificationResult.consistencyScore;
+    summary.flaggedClaims = verificationResult.flaggedClaims;
+    await summary.save();
+
+    // 9. Update job status to completed after verification succeeds
+    job.status = 'completed';
     job.completedAt = new Date();
     await job.save();
 
-    // 8. Emit an AuditLog event
+    // 10. Emit AuditLog events (both summarize and verify)
     await AuditLogModel.create({
       eventType: 'summarize',
       jobId: job._id,
       documentId: documents[0]._id,
       payload: {
-        action: 'job_completed',
+        action: 'job_summarized',
         modelBackend: job.modelBackend,
         latencyMs: totalLatency,
         levelsUsed: result.levelsUsed,
@@ -87,7 +102,19 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
       },
     });
 
-    console.log(`[Worker Processor] Job ${jobId} completed successfully.`);
+    await AuditLogModel.create({
+      eventType: 'verify',
+      jobId: job._id,
+      documentId: documents[0]._id,
+      payload: {
+        action: 'verification_completed',
+        consistencyScore: verificationResult.consistencyScore,
+        flaggedCount: verificationResult.flaggedClaims.length,
+        summaryId: summary._id,
+      },
+    });
+
+    console.log(`[Worker Processor] Job ${jobId} verification completed. Status: completed.`);
     return { summaryId: summary._id };
   } catch (error: any) {
     console.error(`[Worker Processor] Job ${jobId} failed:`, error);

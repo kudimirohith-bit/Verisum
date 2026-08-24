@@ -86,17 +86,18 @@ describe('Summarization Jobs Integration Tests', () => {
 
       const jobId = res.body.job.id;
 
-      // 2. Assert job status is updated to 'verifying' in the database (since our mock processed it inline)
+      // 2. Assert job status is updated to 'completed' in the database (since verification finished)
       const jobDb = await SummarizationJobModel.findById(jobId);
       expect(jobDb).toBeDefined();
-      expect(jobDb!.status).toBe('verifying');
+      expect(jobDb!.status).toBe('completed');
       expect(jobDb!.completedAt).toBeDefined();
 
-      // 3. Assert a Summary document was created with non-empty summaryText
+      // 3. Assert a Summary document was created with non-empty summaryText and consistencyScore
       const summary = await SummaryModel.findOne({ jobId });
       expect(summary).toBeDefined();
       expect(summary!.summaryText).not.toBe('');
       expect(summary!.tokenCount).toBeGreaterThan(0);
+      expect(summary!.consistencyScore).not.toBeNull();
       expect(summary!.automaticMetrics).toBeDefined();
       expect(summary!.automaticMetrics.modelName).toBeDefined();
 
@@ -106,7 +107,7 @@ describe('Summarization Jobs Integration Tests', () => {
       // 4. Assert AuditLog entry was emitted
       const auditLog = await AuditLogModel.findOne({ jobId, eventType: 'summarize' });
       expect(auditLog).toBeDefined();
-      expect(auditLog!.payload.action).toBe('job_completed');
+      expect(auditLog!.payload.action).toBe('job_summarized');
       expect(auditLog!.payload.modelBackend).toBe(backend);
     }
   });

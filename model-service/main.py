@@ -155,6 +155,111 @@ def deid_ner(req: NerRequest):
     return NerResponse(entities=entities, deidentified_text=deidentified)
 
 
+# ── NLI Entailment Endpoint ───────────────────────────────────────────────────
+class NliCheckRequest(BaseModel):
+    premise: str
+    hypothesis: str
+
+
+class NliCheckResponse(BaseModel):
+    entailment_score: float
+    contradiction_score: float
+    neutral_score: float
+    verdict: str
+
+
+@app.post("/nli-check", response_model=NliCheckResponse)
+def nli_check(req: NliCheckRequest):
+    """
+    Evaluates entailment vs contradiction vs neutral for a premise (source chunk)
+    and a hypothesis (summary claim sentence).
+    """
+    import re
+    premise = req.premise.lower().strip()
+    hypothesis = req.hypothesis.lower().strip()
+
+    if not premise or not hypothesis:
+        return NliCheckResponse(
+            entailment_score=0.0,
+            contradiction_score=0.0,
+            neutral_score=1.0,
+            verdict="neutral"
+        )
+
+    # 1. Number comparison (numeric hallucination detection)
+    p_nums = set(re.findall(r'\b\d+(?:\.\d+)?\b', premise))
+    h_nums = set(re.findall(r'\b\d+(?:\.\d+)?\b', hypothesis))
+
+    missing_nums = h_nums - p_nums
+    if missing_nums:
+        return NliCheckResponse(
+            entailment_score=0.05,
+            contradiction_score=0.90,
+            neutral_score=0.05,
+            verdict="contradiction"
+        )
+
+    # 2. Negation flip check
+    negation_words = {"no", "not", "denies", "denied", "without", "absent", "negative", "never", "none"}
+    p_negs = set(w for w in premise.split() if w in negation_words)
+    h_negs = set(w for w in hypothesis.split() if w in negation_words)
+
+    if (len(p_negs) > 0) != (len(h_negs) > 0):
+        p_words = set(re.findall(r'\b[a-z]{3,}\b', premise)) - negation_words
+        h_words = set(re.findall(r'\b[a-z]{3,}\b', hypothesis)) - negation_words
+        common = p_words & h_words
+        if len(common) >= 1:
+            return NliCheckResponse(
+                entailment_score=0.10,
+                contradiction_score=0.85,
+                neutral_score=0.05,
+                verdict="contradiction"
+            )
+
+    # 3. Word/concept overlap scoring
+    p_words = set(re.findall(r'\b[a-z]{3,}\b', premise))
+    h_words = set(re.findall(r'\b[a-z]{3,}\b', hypothesis))
+
+    stopwords = {"the", "and", "was", "for", "with", "that", "this", "from", "were", "been", "have", "has", "had", "patient", "showed", "note"}
+    h_content = h_words - stopwords
+    p_content = p_words - stopwords
+
+    if not h_content:
+        return NliCheckResponse(
+            entailment_score=0.80,
+            contradiction_score=0.10,
+            neutral_score=0.10,
+            verdict="entailment"
+        )
+
+    overlap = h_content & p_content
+    overlap_ratio = len(overlap) / len(h_content)
+
+    if overlap_ratio >= 0.5:
+        ent_score = round(min(0.99, 0.60 + (overlap_ratio * 0.40)), 2)
+        return NliCheckResponse(
+            entailment_score=ent_score,
+            contradiction_score=0.05,
+            neutral_score=round(1.0 - ent_score - 0.05, 2),
+            verdict="entailment"
+        )
+    elif overlap_ratio >= 0.25:
+        return NliCheckResponse(
+            entailment_score=0.40,
+            contradiction_score=0.20,
+            neutral_score=0.40,
+            verdict="neutral"
+        )
+    else:
+        return NliCheckResponse(
+            entailment_score=0.10,
+            contradiction_score=0.75,
+            neutral_score=0.15,
+            verdict="contradiction"
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

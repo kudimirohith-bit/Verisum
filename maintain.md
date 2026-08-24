@@ -236,3 +236,39 @@ Two-pass pipeline:
 
 **Grand total: 68 tests, 0 failures ✅** (22 unit + 46 integration)
 
+---
+
+### [2026-07-28] Chunk 0.7 — Factual Consistency & Hallucination Detection Module
+
+#### Verification Architecture (`backend/src/verification/`)
+- **`ConsistencyChecker` Interface**: TypeScript contract for pluggable verification strategies:
+  - `verifyClaims(claims, sourceChunks, config)`: returns `Promise<ClaimVerificationResult[]>`
+- **Detection Strategies Implemented**:
+  1. `NLIConsistencyChecker`: Calls Python FastAPI `model-service` on `POST /nli-check` to evaluate premise vs summary sentence hypothesis for entailment, contradiction, and neutral scores. Includes local fallback with clinical negation handling and medical synonym expansion.
+  2. `EntityGroundingChecker`: Extracts numeric values, lab values, dosages, and dates (e.g., `500mg`, `120/80`, `01/15/2024`) from summary sentences and verifies grounding against source text. Flags ungrounded entities with `verdict: 'ungrounded'`.
+  3. `LLMJudgeChecker`: Secondary hosted-LLM call prompting structured verdicts on claim vs source chunk support.
+- **Per-docType Configuration (`backend/src/verification/config.ts`)**:
+  - Configurable entailment thresholds, contradiction thresholds, strict numeric grounding flags, and active strategy arrays per note type (`radiology_report`, `discharge_summary`, `ehr_note`, `dialogue_transcript`, `biomedical_literature`).
+- **`VerificationPipeline`**: Composite orchestrator running active checkers, aggregating claim verdicts, computing overall `consistencyScore` (0.0 to 1.0), and compiling `flaggedClaims`.
+
+#### Async Job Processor Integration (`backend/src/jobs/processor.ts`)
+- Updates `processSummarizationJob` to transition job status from `running` -> `verifying` -> `completed`.
+- Persists `consistencyScore` and detailed `flaggedClaims` (sentence, sourceChunkId, verdict, confidence, reason) on the MongoDB `Summary` model.
+- Emits an audited event `eventType='verify'` containing score and flagged claim count (no PHI).
+
+#### Python `model-service` NLI Endpoint
+- Added `POST /nli-check` to `model-service/main.py` accepting `{ premise, hypothesis }` and returning `{ entailment_score, contradiction_score, neutral_score, verdict }`.
+
+#### Benchmark Test Suite — `backend/tests/verification/`
+- Synthetic benchmark dataset (`benchmarkData.ts`) featuring 20 clinical pairs (10 faithful, 10 hallucinated across 5 note types).
+- Benchmark runner test (`verification.test.ts`) reports full confusion matrix and metrics:
+  - **True Positives (TP)**: 10
+  - **False Positives (FP)**: 1
+  - **True Negatives (TN)**: 9
+  - **False Negatives (FN)**: 0
+  - **Precision**: 90.9%
+  - **Recall**: 100.0%
+  - **F1 Score**: 95.2%
+
+**Grand total: 71 tests, 0 failures ✅** (22 unit + 49 integration)
+
