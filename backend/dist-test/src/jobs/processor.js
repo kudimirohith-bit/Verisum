@@ -4,7 +4,7 @@ exports.processSummarizationJob = processSummarizationJob;
 const Document_js_1 = require("../models/Document.js");
 const SummarizationJob_js_1 = require("../models/SummarizationJob.js");
 const Summary_js_1 = require("../models/Summary.js");
-const AuditLog_js_1 = require("../models/AuditLog.js");
+const AuditLogger_js_1 = require("../audit/AuditLogger.js");
 const backends_js_1 = require("../summarizer/backends.js");
 const HierarchicalSummarizer_js_1 = require("../chunking/HierarchicalSummarizer.js");
 const index_js_1 = require("../verification/index.js");
@@ -76,27 +76,27 @@ async function processSummarizationJob(jobId) {
         job.completedAt = new Date();
         await job.save();
         // 10. Emit AuditLog events (both summarize and verify)
-        await AuditLog_js_1.AuditLogModel.create({
+        await AuditLogger_js_1.AuditLogger.log({
             eventType: 'summarize',
-            jobId: job._id,
-            documentId: documents[0]._id,
+            jobId: job._id.toString(),
+            documentId: documents[0]._id.toString(),
+            summaryId: summary._id.toString(),
             payload: {
                 action: 'job_summarized',
                 modelBackend: job.modelBackend,
                 latencyMs: totalLatency,
                 levelsUsed: result.levelsUsed,
-                summaryId: summary._id,
             },
         });
-        await AuditLog_js_1.AuditLogModel.create({
+        await AuditLogger_js_1.AuditLogger.log({
             eventType: 'verify',
-            jobId: job._id,
-            documentId: documents[0]._id,
+            jobId: job._id.toString(),
+            documentId: documents[0]._id.toString(),
+            summaryId: summary._id.toString(),
             payload: {
                 action: 'verification_completed',
                 consistencyScore: verificationResult.consistencyScore,
                 flaggedCount: verificationResult.flaggedClaims.length,
-                summaryId: summary._id,
             },
         });
         console.log(`[Worker Processor] Job ${jobId} verification completed. Status: completed.`);
@@ -107,9 +107,9 @@ async function processSummarizationJob(jobId) {
         job.status = 'failed';
         await job.save();
         // Emit error audit log
-        await AuditLog_js_1.AuditLogModel.create({
+        await AuditLogger_js_1.AuditLogger.log({
             eventType: 'summarize',
-            jobId: job._id,
+            jobId: job._id.toString(),
             payload: {
                 action: 'job_failed',
                 error: error.message,

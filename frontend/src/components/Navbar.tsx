@@ -5,8 +5,8 @@ interface NavbarProps {
   userRole: 'clinician' | 'researcher' | 'admin';
   setUserRole: (role: 'clinician' | 'researcher' | 'admin') => void;
   backendStatus: string;
-  currentTab: 'upload' | 'jobs' | 'review';
-  setCurrentTab: (tab: 'upload' | 'jobs' | 'review') => void;
+  currentTab: 'upload' | 'jobs' | 'review' | 'audit';
+  setCurrentTab: (tab: 'upload' | 'jobs' | 'review' | 'audit') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -64,6 +64,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             data-testid="nav-review"
           >
             Review & Feedback
+          </button>
+          <button
+            onClick={() => setCurrentTab('audit')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'audit'
+                ? 'bg-cyan-500 text-slate-950 shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            data-testid="nav-audit"
+          >
+            Audit & Metrics
           </button>
         </div>
 

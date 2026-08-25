@@ -65,13 +65,16 @@ router.post('/:id/feedback', middleware_js_1.requireAuth, (0, middleware_js_1.re
     // Emit audit log event
     await (0, audit_js_1.logEvent)({
         eventType: 'review',
-        actorId: reviewerId,
+        actorId: req.user.sub,
+        summaryId: summary._id.toString(),
+        jobId: summary.jobId ? summary.jobId.toString() : null,
+        requestId: req.requestId,
         payload: {
-            action: 'submit_feedback',
-            summaryId: summary._id.toString(),
+            action: 'feedback_submitted',
             completenessRating: cNum,
             correctnessRating: rNum,
             concisenessRating: sNum,
+            hasComment: Boolean(comment),
         },
     });
     res.status(201).json({

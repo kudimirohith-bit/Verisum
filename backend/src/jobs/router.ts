@@ -58,13 +58,15 @@ router.post(
 
     // Audit log
     await logEvent({
-      eventType: 'verify', // Or appropriate category
+      eventType: 'summarize',
       actorId: req.user!.sub,
+      jobId: job._id.toString(),
+      documentId: job.documentIds[0]?.toString(),
+      requestId: req.requestId,
       payload: {
-        action: 'create_job',
-        jobId: job._id.toString(),
-        documentIds,
+        action: 'job_created',
         modelBackend,
+        documentCount: job.documentIds.length,
       },
     });
 

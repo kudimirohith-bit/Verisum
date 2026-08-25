@@ -88,7 +88,7 @@ router.post(
     const user = await UserModel.create({ email, role, passwordHash });
 
     await logEvent({
-      eventType: 'upload', // closest existing audit type; will be refined in 0.9
+      eventType: 'auth',
       actorId: req.user?.sub,
       payload: { action: 'admin_create_user', targetEmail: email, targetRole: role },
     });
@@ -130,6 +130,12 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     role: user.role,
   });
   const refreshToken = signRefreshToken(user._id.toString());
+
+  await logEvent({
+    eventType: 'auth',
+    actorId: user._id.toString(),
+    payload: { action: 'login', role: user.role },
+  });
 
   // Store refresh token as httpOnly cookie
   res.cookie(REFRESH_COOKIE, refreshToken, {
@@ -190,7 +196,14 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 });
 
 // ── POST /auth/logout ──────────────────────────────────────────────────────────
-router.post('/logout', (_req: Request, res: Response): void => {
+router.post('/logout', (req: Request, res: Response): void => {
+  if (req.user?.sub) {
+    logEvent({
+      eventType: 'auth',
+      actorId: req.user.sub,
+      payload: { action: 'logout' },
+    });
+  }
   res.clearCookie(REFRESH_COOKIE, { path: '/auth/refresh' });
   res.json({ message: 'Logged out successfully.' });
 });

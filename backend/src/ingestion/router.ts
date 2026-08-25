@@ -116,6 +116,7 @@ router.post(
       eventType: 'upload',
       actorId: req.user!.sub,
       documentId: document._id.toString(),
+      requestId: req.requestId,
       payload: {
         docType,
         sourceFilename,

@@ -1,6 +1,6 @@
 import { Schema, model, Document as MongooseDoc, Types } from 'mongoose';
 
-export type AuditEventType = 'upload' | 'summarize' | 'verify' | 'review' | 'export';
+export type AuditEventType = 'auth' | 'upload' | 'summarize' | 'verify' | 'review' | 'export';
 
 export interface IAuditLog extends MongooseDoc {
   _id: Types.ObjectId;
@@ -8,6 +8,8 @@ export interface IAuditLog extends MongooseDoc {
   actorId?: Types.ObjectId | null;
   documentId?: Types.ObjectId | null;
   jobId?: Types.ObjectId | null;
+  summaryId?: Types.ObjectId | null;
+  requestId?: string | null;
   payload: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
@@ -17,7 +19,7 @@ const AuditLogSchema = new Schema<IAuditLog>(
   {
     eventType: {
       type: String,
-      enum: ['upload', 'summarize', 'verify', 'review', 'export'] as AuditEventType[],
+      enum: ['auth', 'upload', 'summarize', 'verify', 'review', 'export'] as AuditEventType[],
       required: true,
     },
     actorId: {
@@ -35,6 +37,16 @@ const AuditLogSchema = new Schema<IAuditLog>(
       ref: 'SummarizationJob',
       default: null,
     },
+    summaryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Summary',
+      default: null,
+    },
+    requestId: {
+      type: String,
+      default: null,
+      index: true,
+    },
     payload: {
       type: Schema.Types.Mixed,
       default: {},
@@ -43,7 +55,33 @@ const AuditLogSchema = new Schema<IAuditLog>(
   { timestamps: true },
 );
 
-// Compound index on eventType + createdAt for audit trail queries
+// Compound indexes for fast administrative filtering & auditing
 AuditLogSchema.index({ eventType: 1, createdAt: -1 });
+AuditLogSchema.index({ actorId: 1, createdAt: -1 });
+AuditLogSchema.index({ documentId: 1 });
+AuditLogSchema.index({ jobId: 1 });
+
+// ── Immutability Enforcement ───────────────────────────────────────────────────
+// Audit logs are append-only. Prevent update and delete mutations via Mongoose hooks.
+const immutableError = () => new Error('Audit logs are immutable and cannot be updated or deleted.');
+
+AuditLogSchema.pre('updateOne', function (next) {
+  next(immutableError());
+});
+
+AuditLogSchema.pre('findOneAndUpdate', function (next) {
+  next(immutableError());
+});
+
+AuditLogSchema.pre('deleteOne', function (next) {
+  next(immutableError());
+});
+
+AuditLogSchema.pre('deleteMany', function (next) {
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+  next(immutableError());
+});
 
 export const AuditLogModel = model<IAuditLog>('AuditLog', AuditLogSchema);

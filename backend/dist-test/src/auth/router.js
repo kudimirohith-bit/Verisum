@@ -73,7 +73,7 @@ router.post('/admin/create-user', middleware_js_1.requireAuth, (0, middleware_js
     const passwordHash = await bcryptjs_1.default.hash(password, BCRYPT_ROUNDS);
     const user = await User_js_1.UserModel.create({ email, role, passwordHash });
     await (0, audit_js_1.logEvent)({
-        eventType: 'upload', // closest existing audit type; will be refined in 0.9
+        eventType: 'auth',
         actorId: req.user?.sub,
         payload: { action: 'admin_create_user', targetEmail: email, targetRole: role },
     });
@@ -108,6 +108,11 @@ router.post('/login', async (req, res) => {
         role: user.role,
     });
     const refreshToken = (0, tokens_js_1.signRefreshToken)(user._id.toString());
+    await (0, audit_js_1.logEvent)({
+        eventType: 'auth',
+        actorId: user._id.toString(),
+        payload: { action: 'login', role: user.role },
+    });
     // Store refresh token as httpOnly cookie
     res.cookie(REFRESH_COOKIE, refreshToken, {
         httpOnly: true,
@@ -159,7 +164,14 @@ router.post('/refresh', async (req, res) => {
     }
 });
 // ── POST /auth/logout ──────────────────────────────────────────────────────────
-router.post('/logout', (_req, res) => {
+router.post('/logout', (req, res) => {
+    if (req.user?.sub) {
+        (0, audit_js_1.logEvent)({
+            eventType: 'auth',
+            actorId: req.user.sub,
+            payload: { action: 'logout' },
+        });
+    }
     res.clearCookie(REFRESH_COOKIE, { path: '/auth/refresh' });
     res.json({ message: 'Logged out successfully.' });
 });

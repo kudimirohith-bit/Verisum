@@ -108,6 +108,7 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         eventType: 'upload',
         actorId: req.user.sub,
         documentId: document._id.toString(),
+        requestId: req.requestId,
         payload: {
             docType,
             sourceFilename,

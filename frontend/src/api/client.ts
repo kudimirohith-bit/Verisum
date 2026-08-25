@@ -188,3 +188,65 @@ export async function submitClinicianFeedback(
   );
   return response.data;
 }
+
+export interface AuditLogEntry {
+  _id: string;
+  eventType: 'auth' | 'upload' | 'summarize' | 'verify' | 'review' | 'export';
+  actorId?: string;
+  documentId?: string;
+  jobId?: string;
+  summaryId?: string;
+  requestId?: string;
+  payload: Record<string, any>;
+  createdAt: string;
+}
+
+export interface AuditQueryResponse {
+  logs: AuditLogEntry[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export interface AuditMetricsResponse {
+  volumeOverTime: Array<{ date: string; count: number }>;
+  avgConsistencyByBackend: Array<{ modelBackend: string; avgConsistencyScore: number; totalSummaries: number }>;
+  avgFeedbackByBackend: Array<{
+    modelBackend: string;
+    avgCompleteness: number;
+    avgCorrectness: number;
+    avgConciseness: number;
+    totalReviews: number;
+  }>;
+  flaggedClaimRateByDocType: Array<{
+    docType: string;
+    totalSummaries: number;
+    flaggedCount: number;
+    flaggedRate: number;
+  }>;
+}
+
+export async function getAuditLogs(params?: {
+  eventType?: string;
+  requestId?: string;
+  documentId?: string;
+  actorId?: string;
+  page?: number;
+  limit?: number;
+}): Promise<AuditQueryResponse> {
+  const response = await apiClient.get<AuditQueryResponse>('/audit', { params });
+  return response.data;
+}
+
+export async function getAuditMetrics(): Promise<AuditMetricsResponse> {
+  const response = await apiClient.get<AuditMetricsResponse>('/audit/metrics');
+  return response.data;
+}
+
+export async function exportAuditLogs(format: 'csv' | 'json' = 'json', eventType?: string): Promise<Blob> {
+  const response = await apiClient.get('/audit/export', {
+    params: { format, eventType },
+    responseType: 'blob',
+  });
+  return response.data;
+}

@@ -6,11 +6,12 @@ import { UploadScreen } from './components/UploadScreen';
 import { JobStatusScreen } from './components/JobStatusScreen';
 import { SummaryReviewScreen } from './components/SummaryReviewScreen';
 import { ComparisonView } from './components/ComparisonView';
+import { AdminAuditDashboard } from './components/AdminAuditDashboard';
 
 function MainApplication() {
   const [userRole, setUserRole] = useState<'clinician' | 'researcher' | 'admin'>('clinician');
   const [backendStatus, setBackendStatus] = useState<string>('checking...');
-  const [currentTab, setCurrentTab] = useState<'upload' | 'jobs' | 'review'>('upload');
+  const [currentTab, setCurrentTab] = useState<'upload' | 'jobs' | 'review' | 'audit'>('upload');
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [completedJobResults, setCompletedJobResults] = useState<JobStatusResponse[]>([]);
 
@@ -101,10 +102,14 @@ function MainApplication() {
             />
           )
         )}
+
+        {currentTab === 'audit' && (
+          <AdminAuditDashboard userRole={userRole} />
+        )}
       </main>
 
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-600 max-w-7xl mx-auto w-full">
-        VeriSumm &copy; {new Date().getFullYear()} — Safety-First Factual Verification & Clinician Feedback System (Chunk 0.8)
+        VeriSumm &copy; {new Date().getFullYear()} — Safety-First Audit Logging & Clinician Benchmarking System (Chunk 0.9)
       </footer>
     </div>
   );

@@ -2,6 +2,7 @@ import { DocumentModel } from '../models/Document.js';
 import { SummarizationJobModel } from '../models/SummarizationJob.js';
 import { SummaryModel } from '../models/Summary.js';
 import { AuditLogModel } from '../models/AuditLog.js';
+import { AuditLogger } from '../audit/AuditLogger.js';
 import { BackendRegistry } from '../summarizer/backends.js';
 import { HierarchicalSummarizer } from '../chunking/HierarchicalSummarizer.js';
 import { VerificationPipeline } from '../verification/index.js';
@@ -89,28 +90,28 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
     await job.save();
 
     // 10. Emit AuditLog events (both summarize and verify)
-    await AuditLogModel.create({
+    await AuditLogger.log({
       eventType: 'summarize',
-      jobId: job._id,
-      documentId: documents[0]._id,
+      jobId: job._id.toString(),
+      documentId: documents[0]._id.toString(),
+      summaryId: summary._id.toString(),
       payload: {
         action: 'job_summarized',
         modelBackend: job.modelBackend,
         latencyMs: totalLatency,
         levelsUsed: result.levelsUsed,
-        summaryId: summary._id,
       },
     });
 
-    await AuditLogModel.create({
+    await AuditLogger.log({
       eventType: 'verify',
-      jobId: job._id,
-      documentId: documents[0]._id,
+      jobId: job._id.toString(),
+      documentId: documents[0]._id.toString(),
+      summaryId: summary._id.toString(),
       payload: {
         action: 'verification_completed',
         consistencyScore: verificationResult.consistencyScore,
         flaggedCount: verificationResult.flaggedClaims.length,
-        summaryId: summary._id,
       },
     });
 
@@ -122,9 +123,9 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
     await job.save();
 
     // Emit error audit log
-    await AuditLogModel.create({
+    await AuditLogger.log({
       eventType: 'summarize',
-      jobId: job._id,
+      jobId: job._id.toString(),
       payload: {
         action: 'job_failed',
         error: error.message,
