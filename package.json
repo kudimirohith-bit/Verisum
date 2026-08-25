@@ -14,10 +14,15 @@
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:worker": "npm run dev --workspace=worker",
     "build:all": "npm run build --workspaces --if-present",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "npm run test --workspace=backend",
+    "test:coverage": "npm run test:coverage --workspace=backend",
     "test:frontend": "npm run test --workspace=frontend",
+    "test:e2e": "npx playwright test",
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "jsdom": "^24.0.0",

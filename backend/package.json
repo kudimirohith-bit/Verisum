@@ -14,7 +14,8 @@
     "build:test": "tsc -p tsconfig.jest.json",
     "test": "npm run build:test && npm run test:unit && npm run test:integration",
     "test:unit": "node --max-old-space-size=256 dist-test/tests/chunking.runner.js",
-    "test:integration": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 node --max-old-space-size=2048 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode'"
+    "test:integration": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 node --max-old-space-size=4096 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode|chunking'",
+    "test:coverage": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 node --max-old-space-size=4096 ../node_modules/.bin/jest --runInBand --forceExit --coverage --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode|chunking'"
   },
   "dependencies": {
     "@verisumm/common": "*",
@@ -65,6 +66,33 @@
     "testTimeout": 30000,
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "collectCoverageFrom": [
+      "dist-test/src/**/*.js",
+      "!dist-test/src/index.js",
+      "!dist-test/src/scripts/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 70,
+        "statements": 70
+      },
+      "./dist-test/src/chunking/": {
+        "lines": 80,
+        "statements": 80
+      },
+      "./dist-test/src/verification/": {
+        "lines": 80,
+        "statements": 80
+      },
+      "./dist-test/src/auth/": {
+        "lines": 75,
+        "statements": 75
+      },
+      "./dist-test/src/audit/": {
+        "lines": 75,
+        "statements": 75
+      }
     }
   },
   "mongodbMemoryServer": {

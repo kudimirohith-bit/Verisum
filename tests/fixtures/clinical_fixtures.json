@@ -1,0 +1,150 @@
+[
+  {
+    "id": "synth-doc-01",
+    "docType": "ehr_note",
+    "title": "Outpatient Progress Note - Hypertension & Type 2 Diabetes",
+    "rawText": "PATIENT: Johnathan Doe DOB: 04/15/1968 MRN: 98451230\nDATE: 08/12/2026 CLINICIAN: Dr. Sarah Jenkins, MD\n\nSUBJECTIVE:\n58-year-old male presents for routine follow-up of hypertension and type 2 diabetes mellitus. Reports mild fatigue but denies chest pain, shortness of breath, dyspnea, or peripheral edema. Takes Lisinopril 20mg daily and Metformin 1000mg BID.\n\nOBJECTIVE:\nBP 138/86 mmHg, HR 72 bpm, Temp 98.4 F, SpO2 98% on room air.\nLabs: HbA1c 7.2%, Serum Creatinine 0.9 mg/dL, eGFR >60 mL/min.\nPhysical Exam: Unremarkable. Normal heart sounds S1/S2, lungs clear to auscultation bilaterally.\n\nASSESSMENT & PLAN:\n1. Type 2 Diabetes Mellitus: Fair control on current regimen. Continue Metformin 1000mg BID.\n2. Primary Hypertension: Near goal. Continue Lisinopril 20mg daily.\n3. Routine lab recheck in 3 months.",
+    "expectedPhi": [
+      { "text": "Johnathan Doe", "category": "NAME" },
+      { "text": "04/15/1968", "category": "DATE" },
+      { "text": "98451230", "category": "MRN" },
+      { "text": "08/12/2026", "category": "DATE" },
+      { "text": "Dr. Sarah Jenkins, MD", "category": "NAME" }
+    ],
+    "hasInjectedFabrications": false
+  },
+  {
+    "id": "synth-doc-02",
+    "docType": "discharge_summary",
+    "title": "Hospital Discharge Summary - Acute Coronary Syndrome",
+    "rawText": "PATIENT: Eleanor Vance DOB: 11/03/1954 ADMIT DATE: 08/01/2026 DISCHARGE DATE: 08/05/2026\nATTENDING: Dr. Robert Vance, MD LOCATION: Mercy Memorial Hospital\n\nDIAGNOSIS: Non-ST-elevation myocardial infarction (NSTEMI).\n\nHISTORY OF PRESENT ILLNESS:\n71-year-old female admitted with sub-sternal chest discomfort radiating to left arm. Troponin I peaked at 4.2 ng/mL. Cardiac catheterization on 08/02/2026 revealed 85% stenosis of mid-LAD, successfully treated with 1 drug-eluting stent (DES).\n\nDISCHARGE MEDICATIONS:\n1. Aspirin 81mg daily\n2. Ticagrelor 90mg BID\n3. Atorvastatin 80mg daily\n4. Metoprolol succinate 50mg daily\n\nFOLLOW-UP: Cardiology clinic in 2 weeks.",
+    "expectedPhi": [
+      { "text": "Eleanor Vance", "category": "NAME" },
+      { "text": "11/03/1954", "category": "DATE" },
+      { "text": "08/01/2026", "category": "DATE" },
+      { "text": "08/05/2026", "category": "DATE" },
+      { "text": "Dr. Robert Vance, MD", "category": "NAME" },
+      { "text": "Mercy Memorial Hospital", "category": "LOCATION" }
+    ],
+    "hasInjectedFabrications": true,
+    "fabricatedClaims": [
+      {
+        "claim": "Patient underwent emergency triple coronary artery bypass graft (CABG) surgery during admission.",
+        "verified": false,
+        "contradictionReason": "Source document explicitly states patient received 1 drug-eluting stent during cardiac catheterization, not CABG surgery."
+      }
+    ]
+  },
+  {
+    "id": "synth-doc-03",
+    "docType": "radiology_report",
+    "title": "Chest X-Ray 2-Views - Suspected Pneumonia",
+    "rawText": "PATIENT: Marcus Miller DOB: 09/22/1982 DATE OF SERVICE: 08/10/2026\nACCESSION: RAD-2026-77812 FACILITY: Metro Health Diagnostic Center\n\nEXAMINATION: Chest Radiograph, 2 Views (PA and Lateral).\n\nFINDINGS:\nFocal airspace consolidation noted in the right lower lobe consistent with acute bronchopneumonia. No pleural effusion or pneumothorax. Heart size and mediastinal contours are within normal limits. Osseous structures are intact.\n\nIMPRESSION:\nRight lower lobe pneumonia. Recommend clinical correlation and follow-up after completion of antibiotic course.",
+    "expectedPhi": [
+      { "text": "Marcus Miller", "category": "NAME" },
+      { "text": "09/22/1982", "category": "DATE" },
+      { "text": "08/10/2026", "category": "DATE" },
+      { "text": "RAD-2026-77812", "category": "ACCESSION" },
+      { "text": "Metro Health Diagnostic Center", "category": "LOCATION" }
+    ],
+    "hasInjectedFabrications": false
+  },
+  {
+    "id": "synth-doc-04",
+    "docType": "pathology_report",
+    "title": "Surgical Pathology - Skin Biopsy",
+    "rawText": "PATIENT: Alice Walker DOB: 03/14/1979 SPECIMEN DATE: 08/08/2026\nPATHOLOGIST: Dr. Edward Harrison, MD SPECIMEN: Shave biopsy right shoulder lesion.\n\nMICROSCOPIC DESCRIPTION:\nSections reveal atypical melanocytic proliferation extending along the dermo-epidermal junction with pagetoid spread. Breslow depth is 0.65 mm. Peripheral margins are uninvolved by melanoma.\n\nDIAGNOSIS:\nInvasive cutaneous malignant melanoma, superficial spreading type. Clark level III, Breslow thickness 0.65 mm. Margins negative.",
+    "expectedPhi": [
+      { "text": "Alice Walker", "category": "NAME" },
+      { "text": "03/14/1979", "category": "DATE" },
+      { "text": "08/08/2026", "category": "DATE" },
+      { "text": "Dr. Edward Harrison, MD", "category": "NAME" }
+    ],
+    "hasInjectedFabrications": true,
+    "fabricatedClaims": [
+      {
+        "claim": "Pathology confirmed high-grade squamous cell carcinoma with positive deep surgical margins.",
+        "verified": false,
+        "contradictionReason": "Source document diagnoses invasive melanoma with negative margins, contradicting squamous cell carcinoma with positive margins."
+      }
+    ]
+  },
+  {
+    "id": "synth-doc-05",
+    "docType": "dialogue_transcript",
+    "title": "Telehealth Consultation Transcript - Asthma Exacerbation",
+    "rawText": "DATE: 08/14/2026 PARTICIPANTS: Dr. Susan Chen (Doctor), David Smith (Patient)\n\n[00:01] Dr. Chen: Hello David, how are you feeling today?\n[00:05] David: Hi Dr. Chen, I've had wheezing and cough for 3 days, especially at night.\n[00:15] Dr. Chen: Have you been using your Albuterol rescue inhaler?\n[00:20] David: Yes, 2 puffs every 4 hours, but it only gives temporary relief.\n[00:32] Dr. Chen: I am prescribing a 5-day pulse of Oral Prednisone 40mg daily and increasing your Flovent HFA to 220mcg twice daily. If your breathlessness worsens, go to urgent care immediately.",
+    "expectedPhi": [
+      { "text": "08/14/2026", "category": "DATE" },
+      { "text": "Dr. Susan Chen", "category": "NAME" },
+      { "text": "David Smith", "category": "NAME" }
+    ],
+    "hasInjectedFabrications": false
+  },
+  {
+    "id": "synth-doc-06",
+    "docType": "biomedical_literature",
+    "title": "Randomized Trial of SGLT2 Inhibitors in Heart Failure",
+    "rawText": "TITLE: Efficacy of Dapagliflozin in Patients with Heart Failure and Preserved Ejection Fraction: A Double-Blind Randomized Controlled Trial.\n\nMETHODS:\nIn a multi-center randomized controlled trial involving 4,800 patients with HFpEF (LVEF >= 45%), participants were assigned to Dapagliflozin 10mg daily (n=2,400) or placebo (n=2,400) alongside standard therapy. The primary outcome was a composite of cardiovascular death or worsening heart failure event over a median follow-up of 2.3 years.\n\nRESULTS:\nThe primary outcome occurred in 385 patients (16.0%) in the Dapagliflozin group compared to 468 patients (19.5%) in the placebo group (Hazard Ratio 0.82; 95% CI, 0.72 to 0.94; p=0.003). All-cause mortality was not significantly reduced (p=0.12).\n\nCONCLUSION:\nDapagliflozin significantly reduces the risk of cardiovascular death or hospitalization for heart failure in patients with preserved ejection fraction.",
+    "expectedPhi": [],
+    "hasInjectedFabrications": true,
+    "fabricatedClaims": [
+      {
+        "claim": "Dapagliflozin reduced all-cause mortality by 45% with high statistical significance (p < 0.001).",
+        "verified": false,
+        "contradictionReason": "Source document explicitly states all-cause mortality was not significantly reduced (p=0.12)."
+      }
+    ]
+  },
+  {
+    "id": "synth-doc-07",
+    "docType": "ehr_note",
+    "title": "Emergency Department Encounter - Acute Appendicitis",
+    "rawText": "PATIENT: Carlos Ramirez DOB: 06/30/1995 MRN: 11209384\nDATE: 08/18/2026 PHYSICIAN: Dr. Maria Santos, MD\n\nCHIEF COMPLAINT: Severe right lower quadrant abdominal pain for 18 hours with nausea.\n\nPHYSICAL EXAMINATION:\nAbdomen soft, tender to palpation at McBurney's point with positive rebound tenderness and positive Rovsing sign. Afebrile at 98.9 F.\n\nIMAGING & LABS:\nCT Abdomen/Pelvis with IV contrast demonstrates a dilated, non-compressible appendix measuring 9.5 mm with periappendiceal fat stranding and appendicolith. WBC 14.8 x10^3/uL.\n\nPLAN:\nUrgent laparoscopic appendectomy. Patient consent obtained and prepped for OR.",
+    "expectedPhi": [
+      { "text": "Carlos Ramirez", "category": "NAME" },
+      { "text": "06/30/1995", "category": "DATE" },
+      { "text": "11209384", "category": "MRN" },
+      { "text": "08/18/2026", "category": "DATE" },
+      { "text": "Dr. Maria Santos, MD", "category": "NAME" }
+    ],
+    "hasInjectedFabrications": false
+  },
+  {
+    "id": "synth-doc-08",
+    "docType": "discharge_summary",
+    "title": "Inpatient Psychiatric Unit Discharge Summary",
+    "rawText": "PATIENT: Samantha Reed DOB: 02/19/1991 ADMIT DATE: 08/10/2026 DISCHARGE DATE: 08/17/2026\nATTENDING: Dr. Alan Turing, MD FACILITY: Pinecrest Behavioral Health Center\n\nDIAGNOSIS: Major Depressive Disorder, Recurrent, Severe without Psychotic Features.\n\nCOURSE OF TREATMENT:\n35-year-old female admitted voluntarily following severe depressive episode with suicidal ideation. Initiated on Sertraline 50mg daily, titrated to 100mg daily. Participated in daily Cognitive Behavioral Therapy (CBT) group sessions. At discharge, suicidal ideation has fully resolved, mood is stable, and safety plan is documented.\n\nDISCHARGE PLAN:\nOutpatient CBT therapy twice weekly and follow-up with Dr. Turing in 10 days.",
+    "expectedPhi": [
+      { "text": "Samantha Reed", "category": "NAME" },
+      { "text": "02/19/1991", "category": "DATE" },
+      { "text": "08/10/2026", "category": "DATE" },
+      { "text": "08/17/2026", "category": "DATE" },
+      { "text": "Dr. Alan Turing, MD", "category": "NAME" },
+      { "text": "Pinecrest Behavioral Health Center", "category": "LOCATION" }
+    ],
+    "hasInjectedFabrications": false
+  },
+  {
+    "id": "synth-doc-09",
+    "docType": "radiology_report",
+    "title": "Brain MRI With and Without Contrast",
+    "rawText": "PATIENT: Brian O'Connor DOB: 07/04/1973 DATE: 08/20/2026\nACCESSION: MRI-2026-9041 CLINICIAN: Dr. Rachel Green, MD\n\nTECHNIQUE: Multi-planar, multi-sequence MRI of the brain before and after administration of 10 mL Gadavist IV.\n\nFINDINGS:\nNo acute territorial infarct, hemorrhage, or mass effect. Mild periventricular white matter T2/FLAIR hyperintensities consistent with chronic microvascular ischemic changes. Ventricles and sulci are age-appropriate. Post-contrast imaging demonstrates no abnormal parenchymal or meningeal enhancement.\n\nIMPRESSION:\n1. No acute intracranial process.\n2. Mild chronic microvascular ischemic white matter changes.",
+    "expectedPhi": [
+      { "text": "Brian O'Connor", "category": "NAME" },
+      { "text": "07/04/1973", "category": "DATE" },
+      { "text": "08/20/2026", "category": "DATE" },
+      { "text": "MRI-2026-9041", "category": "ACCESSION" },
+      { "text": "Dr. Rachel Green, MD", "category": "NAME" }
+    ],
+    "hasInjectedFabrications": false
+  },
+  {
+    "id": "synth-doc-10",
+    "docType": "biomedical_literature",
+    "title": "Meta-Analysis of GLP-1 Receptor Agonists in Chronic Kidney Disease",
+    "rawText": "TITLE: Renal Outcomes with GLP-1 Receptor Agonists in Patients with Type 2 Diabetes: A Systematic Review and Meta-Analysis of 7 Landmark Trials.\n\nBACKGROUND:\nGLP-1 receptor agonists reduce cardiovascular events in type 2 diabetes, but their cumulative impact on renal progression requires pooled quantification.\n\nRESULTS:\nAcross 7 major trials comprising 56,004 patients, GLP-1 receptor agonist therapy reduced the composite kidney outcome (macroalbuminuria, doubling of serum creatinine, 40% eGFR decline, or kidney replacement therapy) by 17% (HR 0.83; 95% CI, 0.78 to 0.89; p < 0.0001). Macroalbuminuria incidence alone was reduced by 24% (HR 0.76; 95% CI, 0.70 to 0.83).\n\nCONCLUSION:\nGLP-1 receptor agonists confer substantial renal protective benefits in patients with type 2 diabetes.",
+    "expectedPhi": [],
+    "hasInjectedFabrications": false
+  }
+]
