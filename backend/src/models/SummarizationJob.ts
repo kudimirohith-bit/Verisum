@@ -5,6 +5,7 @@ export type JobStatus = 'queued' | 'running' | 'verifying' | 'completed' | 'fail
 export interface ISummarizationJob extends MongooseDoc {
   _id: Types.ObjectId;
   documentIds: Types.ObjectId[];
+  collectionId?: Types.ObjectId | null;
   modelBackend: string;
   status: JobStatus;
   createdAt: Date;
@@ -21,6 +22,11 @@ const SummarizationJobSchema = new Schema<ISummarizationJob>(
         required: true,
       },
     ],
+    collectionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'DocumentCollection',
+      default: null,
+    },
     modelBackend: {
       type: String,
       required: true,

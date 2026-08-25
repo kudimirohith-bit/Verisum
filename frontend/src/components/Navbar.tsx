@@ -5,8 +5,8 @@ interface NavbarProps {
   userRole: 'clinician' | 'researcher' | 'admin';
   setUserRole: (role: 'clinician' | 'researcher' | 'admin') => void;
   backendStatus: string;
-  currentTab: 'upload' | 'jobs' | 'review' | 'audit';
-  setCurrentTab: (tab: 'upload' | 'jobs' | 'review' | 'audit') => void;
+  currentTab: 'upload' | 'jobs' | 'review' | 'audit' | 'benchmark' | 'collections';
+  setCurrentTab: (tab: 'upload' | 'jobs' | 'review' | 'audit' | 'benchmark' | 'collections') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -44,6 +44,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             Upload & Compare
           </button>
           <button
+            onClick={() => setCurrentTab('collections')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'collections'
+                ? 'bg-cyan-500 text-slate-950 shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            data-testid="nav-collections"
+          >
+            Collections & Literature
+          </button>
+          <button
             onClick={() => setCurrentTab('jobs')}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               currentTab === 'jobs'
@@ -75,6 +86,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             data-testid="nav-audit"
           >
             Audit & Metrics
+          </button>
+          <button
+            onClick={() => setCurrentTab('benchmark')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'benchmark'
+                ? 'bg-cyan-500 text-slate-950 shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            data-testid="nav-benchmark"
+          >
+            Benchmarking
           </button>
         </div>
 

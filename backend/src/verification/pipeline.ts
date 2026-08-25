@@ -49,14 +49,34 @@ export class VerificationPipeline {
         currentOffset = endOffset;
       }
 
-      // Map to source chunk if sentence matches source chunk reference or default to first chunk
-      const sourceChunkId = sourceChunks.length > 0 ? sourceChunks[0].id : undefined;
+      // Best matching source chunk based on word overlap
+      let bestChunk: SourceChunk | undefined = sourceChunks[0];
+      let maxOverlap = -1;
+
+      const sentenceWords = new Set(sentence.toLowerCase().split(/\W+/).filter(Boolean));
+      for (const chunk of sourceChunks) {
+        const chunkWords = chunk.text.toLowerCase().split(/\W+/).filter(Boolean);
+        let overlap = 0;
+        for (const w of chunkWords) {
+          if (sentenceWords.has(w)) overlap++;
+        }
+        if (overlap > maxOverlap) {
+          maxOverlap = overlap;
+          bestChunk = chunk;
+        }
+      }
+
+      const sourceChunkId = bestChunk ? bestChunk.id : undefined;
+      const sourceDocumentId = bestChunk ? (bestChunk.docId || bestChunk.id) : undefined;
+      const sourceFilename = bestChunk ? bestChunk.sourceFilename : undefined;
 
       claims.push({
         sentence,
         startOffset: Math.max(0, startOffset),
         endOffset: Math.max(0, endOffset),
         sourceChunkId,
+        sourceDocumentId,
+        sourceFilename,
       });
     }
 
@@ -100,6 +120,8 @@ export class VerificationPipeline {
           endOffset: claim.endOffset,
           sentence: claim.sentence,
           sourceChunkId: claim.sourceChunkId,
+          sourceDocumentId: claim.sourceDocumentId,
+          sourceFilename: claim.sourceFilename,
           verdict: worst.verdict,
           confidence: worst.confidence,
           reason: worst.reason,

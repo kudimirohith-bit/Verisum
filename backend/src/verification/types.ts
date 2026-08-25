@@ -5,6 +5,8 @@ export type VerificationVerdict = 'entailment' | 'contradiction' | 'neutral' | '
 export interface SourceChunk {
   id: string;
   text: string;
+  docId?: string;
+  sourceFilename?: string;
   sentenceRange?: [number, number];
 }
 
@@ -13,6 +15,8 @@ export interface Claim {
   startOffset: number;
   endOffset: number;
   sourceChunkId?: string;
+  sourceDocumentId?: string;
+  sourceFilename?: string;
 }
 
 export interface ClaimVerificationResult {

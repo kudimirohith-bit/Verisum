@@ -8,6 +8,8 @@ const FlaggedClaimSchema = new mongoose_1.Schema({
     endOffset: { type: Number, required: true },
     sentence: { type: String },
     sourceChunkId: { type: String },
+    sourceDocumentId: { type: String },
+    sourceFilename: { type: String },
     verdict: { type: String },
     confidence: { type: Number },
     reason: { type: String },

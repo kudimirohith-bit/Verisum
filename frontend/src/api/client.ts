@@ -250,3 +250,66 @@ export async function exportAuditLogs(format: 'csv' | 'json' = 'json', eventType
   });
   return response.data;
 }
+
+// ── Collections API ─────────────────────────────────────────────────────────────
+
+export interface DocumentCollectionData {
+  _id: string;
+  name: string;
+  docType: string;
+  description?: string;
+  documentCount?: number;
+  createdAt: string;
+}
+
+export interface CollectionDetailsResponse {
+  collection: DocumentCollectionData;
+  documents: Array<{
+    _id: string;
+    docType: string;
+    rawText: string;
+    sourceFilename: string;
+    uploadedAt: string;
+  }>;
+}
+
+export async function createCollection(payload: {
+  name: string;
+  docType: string;
+  description?: string;
+}): Promise<{ collection: DocumentCollectionData }> {
+  const response = await apiClient.post('/collections', payload);
+  return response.data;
+}
+
+export async function fetchCollections(): Promise<{ collections: DocumentCollectionData[] }> {
+  const response = await apiClient.get('/collections');
+  return response.data;
+}
+
+export async function fetchCollectionDetails(id: string): Promise<CollectionDetailsResponse> {
+  const response = await apiClient.get(`/collections/${id}`);
+  return response.data;
+}
+
+export async function attachDocumentsToCollection(
+  id: string,
+  payload: {
+    documents: Array<{
+      sourceFilename: string;
+      rawText: string;
+      docType?: string;
+    }>;
+  }
+): Promise<CollectionDetailsResponse> {
+  const response = await apiClient.post(`/collections/${id}/documents`, payload);
+  return response.data;
+}
+
+export async function summarizeCollection(
+  id: string,
+  modelBackend: string = 'local_clinical_model'
+): Promise<{ jobId: string }> {
+  const response = await apiClient.post(`/collections/${id}/summarize`, { modelBackend });
+  return response.data;
+}

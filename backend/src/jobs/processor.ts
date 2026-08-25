@@ -76,7 +76,12 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
 
     // 8. Run Verification Pipeline (0.7 Factual Consistency & Hallucination Detection)
     const pipeline = new VerificationPipeline();
-    const sourceChunks = chunkableDocs.map((d) => ({ id: d.id, text: d.text }));
+    const sourceChunks = documents.map((d) => ({
+      id: d._id.toString(),
+      docId: d._id.toString(),
+      text: d.rawText,
+      sourceFilename: d.sourceFilename,
+    }));
     const verificationResult = await pipeline.verify(result.finalSummary, sourceChunks, docType);
 
     // Update Summary with verification metrics

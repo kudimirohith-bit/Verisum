@@ -6,6 +6,8 @@ export interface IFlaggedClaim {
   endOffset: number;
   sentence?: string;
   sourceChunkId?: string;
+  sourceDocumentId?: string;
+  sourceFilename?: string;
   verdict?: string;
   confidence?: number;
   reason?: string;
@@ -30,6 +32,8 @@ const FlaggedClaimSchema = new Schema<IFlaggedClaim>(
     endOffset: { type: Number, required: true },
     sentence: { type: String },
     sourceChunkId: { type: String },
+    sourceDocumentId: { type: String },
+    sourceFilename: { type: String },
     verdict: { type: String },
     confidence: { type: Number },
     reason: { type: String },

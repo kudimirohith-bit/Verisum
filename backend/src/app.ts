@@ -8,6 +8,8 @@ import { ingestionRouter } from './ingestion/index.js';
 import { jobsRouter } from './jobs/index.js';
 import { summariesRouter } from './summaries/index.js';
 import { auditRouter } from './audit/index.js';
+import { benchmarkRouter } from './benchmark/router.js';
+import { collectionsRouter } from './collections/router.js';
 
 dotenv.config();
 
@@ -29,5 +31,7 @@ app.use('/documents', ingestionRouter);
 app.use('/jobs', jobsRouter);
 app.use('/summaries', summariesRouter);
 app.use('/audit', auditRouter);
+app.use('/benchmark', benchmarkRouter);
+app.use('/collections', collectionsRouter);
 
 export { app };

@@ -18,12 +18,14 @@ export const SummaryReviewScreen: React.FC<SummaryReviewScreenProps> = ({
 }) => {
   const [selectedChunkId, setSelectedChunkId] = useState<string | null>(null);
 
-  const docRecord = jobResult.documents?.[0];
   const summary = jobResult.summary;
-  const feedbackList = jobResult.feedback || [];
-  const existingFeedback = feedbackList[0] || null;
+  const existingFeedback = jobResult.feedback?.[0];
 
-  const rawText = docRecord?.rawText || 'No source document text available.';
+  const documents = jobResult.documents || [];
+  const [activeDocIndex, setActiveDocIndex] = useState(0);
+
+  const currentDoc = documents[activeDocIndex] || documents[0];
+  const rawText = currentDoc?.rawText || 'No source document text available.';
 
   // Naive chunking for source document representation
   const paragraphs = rawText.split(/\n\n+/).filter(Boolean);
@@ -83,14 +85,35 @@ export const SummaryReviewScreen: React.FC<SummaryReviewScreenProps> = ({
         {/* LEFT COLUMN: Source Document View */}
         <div className="space-y-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
-                <FileText className="w-4 h-4 text-cyan-400" />
-                <span>Source Clinical Document</span>
+            <div className="flex flex-col gap-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
+                  <FileText className="w-4 h-4 text-cyan-400" />
+                  <span>Source Document(s) ({documents.length})</span>
+                </div>
+                <div className="text-xs text-slate-500 font-mono">
+                  {currentDoc?.docType || 'Clinical Note'}
+                </div>
               </div>
-              <div className="text-xs text-slate-500 font-mono">
-                {docRecord?.docType || 'Clinical Note'}
-              </div>
+
+              {/* Multi-document Tabs */}
+              {documents.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {documents.map((doc, idx) => (
+                    <button
+                      key={doc._id}
+                      onClick={() => setActiveDocIndex(idx)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+                        activeDocIndex === idx
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                          : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-slate-700/50'
+                      }`}
+                    >
+                      Doc #{idx + 1}: {doc.sourceFilename || `Document ${idx + 1}`}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Source Content Panes */}
@@ -111,7 +134,7 @@ export const SummaryReviewScreen: React.FC<SummaryReviewScreenProps> = ({
                     data-testid={`source-chunk-${idx + 1}`}
                   >
                     <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1 font-sans font-semibold uppercase tracking-wider">
-                      <span>Chunk Section #{idx + 1}</span>
+                      <span>{currentDoc?.sourceFilename ? `${currentDoc.sourceFilename} — Chunk #${idx + 1}` : `Chunk Section #${idx + 1}`}</span>
                       {isSelected && <span className="text-cyan-400">Selected via Claim Link</span>}
                     </div>
                     <div>{pText}</div>

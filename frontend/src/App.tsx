@@ -7,11 +7,13 @@ import { JobStatusScreen } from './components/JobStatusScreen';
 import { SummaryReviewScreen } from './components/SummaryReviewScreen';
 import { ComparisonView } from './components/ComparisonView';
 import { AdminAuditDashboard } from './components/AdminAuditDashboard';
+import { BenchmarkDashboard } from './components/BenchmarkDashboard';
+import { CollectionManagerScreen } from './components/CollectionManagerScreen';
 
 function MainApplication() {
   const [userRole, setUserRole] = useState<'clinician' | 'researcher' | 'admin'>('clinician');
   const [backendStatus, setBackendStatus] = useState<string>('checking...');
-  const [currentTab, setCurrentTab] = useState<'upload' | 'jobs' | 'review' | 'audit'>('upload');
+  const [currentTab, setCurrentTab] = useState<'upload' | 'jobs' | 'review' | 'audit' | 'benchmark' | 'collections'>('upload');
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [completedJobResults, setCompletedJobResults] = useState<JobStatusResponse[]>([]);
 
@@ -48,6 +50,10 @@ function MainApplication() {
       <main className="max-w-7xl mx-auto w-full p-4 sm:p-8 flex-1">
         {currentTab === 'upload' && (
           <UploadScreen onJobsCreated={handleJobsCreated} />
+        )}
+
+        {currentTab === 'collections' && (
+          <CollectionManagerScreen userRole={userRole} />
         )}
 
         {currentTab === 'jobs' && (
@@ -106,10 +112,14 @@ function MainApplication() {
         {currentTab === 'audit' && (
           <AdminAuditDashboard userRole={userRole} />
         )}
+
+        {currentTab === 'benchmark' && (
+          <BenchmarkDashboard />
+        )}
       </main>
 
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-600 max-w-7xl mx-auto w-full">
-        VeriSumm &copy; {new Date().getFullYear()} — Safety-First Audit Logging & Clinician Benchmarking System (Chunk 0.9)
+        VeriSumm &copy; {new Date().getFullYear()} — Safety-First Audit Logging & Benchmarking Harness (Chunk 0.10)
       </footer>
     </div>
   );

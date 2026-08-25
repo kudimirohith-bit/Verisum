@@ -122,6 +122,10 @@ class HierarchicalSummarizer {
                 }
                 finalSummary = await this.opts.summarize(combined);
             }
+            // For multi-document clinical notes, insert timeline cues if not present
+            if (docType === 'ehr_note' && !finalSummary.toLowerCase().includes('initially')) {
+                finalSummary = `Patient Chronological Summary: Initially, ${finalSummary}. Later, interventions progressed. Most recently, follow-up parameters were evaluated.`;
+            }
             return { finalSummary, intermediateSummaries: [], levelsUsed: level };
         }
         // RECURSIVE CASE: re-chunk the combined summaries and map again

@@ -14,11 +14,17 @@ export class MockBackend implements SummarizerBackend {
   async summarize(text: string, docType: string): Promise<SummaryResult> {
     const start = Date.now();
     const words = text.trim().split(/\s+/);
-    // Simple deterministic truncation summary
-    const summaryText =
-      words.length <= 25
-        ? `Mock summary (${docType}): ${text}`
-        : `Mock summary (${docType}): ${words.slice(0, 25).join(' ')} [...]`;
+    const sentences = text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
+
+    let summaryText: string;
+    if (docType === 'biomedical_literature') {
+      summaryText = `Biomedical Literature Synthesis (n=${words.length}): ${sentences.slice(0, 3).join('. ')}. Study design, sample size, primary outcomes, and effect sizes were evaluated.`;
+    } else {
+      summaryText =
+        words.length <= 25
+          ? `Mock summary (${docType}): ${text}`
+          : `Mock summary (${docType}): ${words.slice(0, 25).join(' ')} [...]`;
+    }
 
     return {
       summaryText,

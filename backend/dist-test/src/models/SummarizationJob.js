@@ -10,6 +10,11 @@ const SummarizationJobSchema = new mongoose_1.Schema({
             required: true,
         },
     ],
+    collectionId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'DocumentCollection',
+        default: null,
+    },
     modelBackend: {
         type: String,
         required: true,
