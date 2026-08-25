@@ -14,6 +14,7 @@ import { computeCorrelationStats } from './stats.js';
 import { SummaryModel } from '../models/Summary.js';
 import { ClinicianFeedbackModel } from '../models/ClinicianFeedback.js';
 import { UserModel } from '../models/User.js';
+import { validateBackendAccess } from '../config/deployment.js';
 
 export const benchmarkRouter = Router();
 
@@ -29,6 +30,16 @@ benchmarkRouter.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { name, documentIds, modelBackends, docType } = req.body;
+
+      if (Array.isArray(modelBackends)) {
+        for (const b of modelBackends) {
+          const access = validateBackendAccess(b);
+          if (!access.allowed) {
+            res.status(403).json({ error: 'Forbidden', message: access.message });
+            return;
+          }
+        }
+      }
 
       const run = await runBenchmarkSuite({
         name,

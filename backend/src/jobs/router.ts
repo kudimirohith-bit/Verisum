@@ -6,6 +6,7 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 import { enqueueSummarizationJob } from './queue.js';
 import { processSummarizationJob } from './processor.js';
 import { logEvent } from '../auth/audit.js';
+import { validateBackendAccess } from '../config/deployment.js';
 
 const router = Router();
 
@@ -26,6 +27,12 @@ router.post(
     }
 
     const { documentIds, modelBackend } = parsed.data;
+
+    const access = validateBackendAccess(modelBackend);
+    if (!access.allowed) {
+      res.status(403).json({ error: 'Forbidden', message: access.message });
+      return;
+    }
 
     // Validate that all documentIds exist in database
     const documents = await DocumentModel.find({ _id: { $in: documentIds } });

@@ -9,6 +9,7 @@ const SummarizationJob_js_1 = require("../models/SummarizationJob.js");
 const processor_js_1 = require("../jobs/processor.js");
 const queue_js_1 = require("../jobs/queue.js");
 const AuditLogger_js_1 = require("../audit/AuditLogger.js");
+const deployment_js_1 = require("../config/deployment.js");
 exports.collectionsRouter = (0, express_1.Router)();
 // Apply auth middleware to all collection routes
 exports.collectionsRouter.use(middleware_js_1.requireAuth);
@@ -153,6 +154,12 @@ exports.collectionsRouter.post('/:id/summarize', async (req, res) => {
             res.status(404).json({ message: 'Collection not found' });
             return;
         }
+        const modelBackend = req.body.modelBackend || 'local_clinical_model';
+        const access = (0, deployment_js_1.validateBackendAccess)(modelBackend);
+        if (!access.allowed) {
+            res.status(403).json({ error: 'Forbidden', message: access.message });
+            return;
+        }
         const documents = await Document_js_1.DocumentModel.find({ collectionId: collection._id }).sort({
             uploadedAt: 1,
         });
@@ -160,7 +167,6 @@ exports.collectionsRouter.post('/:id/summarize', async (req, res) => {
             res.status(400).json({ message: 'Collection contains no documents to summarize.' });
             return;
         }
-        const modelBackend = req.body.modelBackend || 'local_clinical_model';
         const documentIds = documents.map((d) => d._id);
         // Create SummarizationJob
         const job = await SummarizationJob_js_1.SummarizationJobModel.create({

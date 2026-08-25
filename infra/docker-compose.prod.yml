@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: verisumm-prod-mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=verisumm
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  mongo-backup:
+    image: mongo:7.0
+    container_name: verisumm-prod-mongo-backup
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/verisumm
+      - BACKUP_INTERVAL_SECONDS=86400 # 24 hours
+    volumes:
+      - mongo_backups:/backups
+      - ./backup.sh:/backup.sh:ro
+    entrypoint: >
+      /bin/sh -c "
+        chmod +x /backup.sh;
+        while true; do
+          /backup.sh;
+          echo '[Backup Cron] Sleeping for 24 hours...';
+          sleep 86400;
+        done
+      "
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: verisumm-prod-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  model-service:
+    build:
+      context: ../model-service
+      dockerfile: Dockerfile
+    container_name: verisumm-prod-model-service
+    restart: always
+    environment:
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: verisumm-prod-backend
+    restart: always
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-offline}
+      - MONGO_URI=mongodb://mongo:27017/verisumm
+      - REDIS_URL=redis://redis:6379
+      - MODEL_SERVICE_URL=http://model-service:8000
+      - FRONTEND_URL=https://localhost
+      - JWT_SECRET=${JWT_SECRET:-prod-super-secret-jwt-key-replace-me}
+      - LLM_PROVIDER=${LLM_PROVIDER:-anthropic}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      model-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  worker:
+    build:
+      context: ..
+      dockerfile: worker/Dockerfile
+    container_name: verisumm-prod-worker
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-offline}
+      - MONGO_URI=mongodb://mongo:27017/verisumm
+      - REDIS_URL=redis://redis:6379
+      - MODEL_SERVICE_URL=http://model-service:8000
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      model-service:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    container_name: verisumm-prod-frontend
+    restart: always
+    depends_on:
+      - backend
+
+  reverse-proxy:
+    image: nginx:1.25-alpine
+    container_name: verisumm-prod-reverse-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  mongo_data:
+  mongo_backups:
+  redis_data:

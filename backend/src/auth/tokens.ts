@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
+import { getSecret } from '../config/secrets.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+function getJwtSecret(): string {
+  return getSecret('JWT_SECRET', 'dev-secret-change-me');
+}
 
 export interface AccessTokenPayload {
   sub: string;        // User._id as string
@@ -18,7 +21,7 @@ export interface RefreshTokenPayload {
  * Signs a short-lived access token (15 min default).
  */
 export function signAccessToken(payload: Omit<AccessTokenPayload, 'type'>): string {
-  return jwt.sign({ ...payload, type: 'access' }, JWT_SECRET, {
+  return jwt.sign({ ...payload, type: 'access' }, getJwtSecret(), {
     expiresIn: '15m',
     algorithm: 'HS256',
   });
@@ -28,7 +31,7 @@ export function signAccessToken(payload: Omit<AccessTokenPayload, 'type'>): stri
  * Signs a long-lived refresh token (7 days).
  */
 export function signRefreshToken(sub: string): string {
-  return jwt.sign({ sub, type: 'refresh' }, JWT_SECRET, {
+  return jwt.sign({ sub, type: 'refresh' }, getJwtSecret(), {
     expiresIn: '7d',
     algorithm: 'HS256',
   });
@@ -39,5 +42,5 @@ export function signRefreshToken(sub: string): string {
  * Throws jwt.JsonWebTokenError or jwt.TokenExpiredError on failure.
  */
 export function verifyToken(token: string): AccessTokenPayload | RefreshTokenPayload {
-  return jwt.verify(token, JWT_SECRET) as AccessTokenPayload | RefreshTokenPayload;
+  return jwt.verify(token, getJwtSecret()) as AccessTokenPayload | RefreshTokenPayload;
 }

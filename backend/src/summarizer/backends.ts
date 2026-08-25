@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { SummarizerBackend, SummaryResult } from '../models/SummarizerBackend.js';
+import { getSecret } from '../config/secrets.js';
+import { validateBackendAccess } from '../config/deployment.js';
 
 // ── Mock Backend ───────────────────────────────────────────────────────────────
 export class MockBackend implements SummarizerBackend {
@@ -43,7 +45,7 @@ export class LocalModelServiceBackend implements SummarizerBackend {
   private readonly serviceUrl: string;
 
   constructor() {
-    this.serviceUrl = process.env.MODEL_SERVICE_URL || 'http://localhost:8000';
+    this.serviceUrl = getSecret('MODEL_SERVICE_URL', 'http://localhost:8000');
   }
 
   countTokens(text: string): number {
@@ -102,10 +104,10 @@ export class HostedLLMBackend implements SummarizerBackend {
   private readonly modelName: string;
 
   constructor() {
-    this.provider = process.env.LLM_PROVIDER || 'anthropic';
-    this.apiKey = process.env.LLM_API_KEY || '';
+    this.provider = getSecret('LLM_PROVIDER', 'anthropic');
+    this.apiKey = getSecret('LLM_API_KEY', '');
     this.modelName =
-      process.env.LLM_MODEL_NAME ||
+      getSecret('LLM_MODEL_NAME') ||
       (this.provider === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-haiku-20240307');
   }
 

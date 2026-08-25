@@ -8,6 +8,7 @@ const Document_js_1 = require("../models/Document.js");
 const middleware_js_1 = require("../auth/middleware.js");
 const queue_js_1 = require("./queue.js");
 const audit_js_1 = require("../auth/audit.js");
+const deployment_js_1 = require("../config/deployment.js");
 const router = (0, express_1.Router)();
 exports.jobsRouter = router;
 /**
@@ -22,6 +23,11 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         return;
     }
     const { documentIds, modelBackend } = parsed.data;
+    const access = (0, deployment_js_1.validateBackendAccess)(modelBackend);
+    if (!access.allowed) {
+        res.status(403).json({ error: 'Forbidden', message: access.message });
+        return;
+    }
     // Validate that all documentIds exist in database
     const documents = await Document_js_1.DocumentModel.find({ _id: { $in: documentIds } });
     if (documents.length !== documentIds.length) {

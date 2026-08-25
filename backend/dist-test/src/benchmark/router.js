@@ -16,6 +16,7 @@ const stats_js_1 = require("./stats.js");
 const Summary_js_1 = require("../models/Summary.js");
 const ClinicianFeedback_js_1 = require("../models/ClinicianFeedback.js");
 const User_js_1 = require("../models/User.js");
+const deployment_js_1 = require("../config/deployment.js");
 exports.benchmarkRouter = (0, express_1.Router)();
 /**
  * POST /benchmark/run
@@ -25,6 +26,15 @@ exports.benchmarkRouter = (0, express_1.Router)();
 exports.benchmarkRouter.post('/run', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('admin', 'researcher'), async (req, res) => {
     try {
         const { name, documentIds, modelBackends, docType } = req.body;
+        if (Array.isArray(modelBackends)) {
+            for (const b of modelBackends) {
+                const access = (0, deployment_js_1.validateBackendAccess)(b);
+                if (!access.allowed) {
+                    res.status(403).json({ error: 'Forbidden', message: access.message });
+                    return;
+                }
+            }
+        }
         const run = await (0, runner_js_1.runBenchmarkSuite)({
             name,
             documentIds,

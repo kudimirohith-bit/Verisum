@@ -14,7 +14,7 @@
     "build:test": "tsc -p tsconfig.jest.json",
     "test": "npm run build:test && npm run test:unit && npm run test:integration",
     "test:unit": "node --max-old-space-size=256 dist-test/tests/chunking.runner.js",
-    "test:integration": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 node --max-old-space-size=2048 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections'"
+    "test:integration": "MONGOMS_SYSTEM_BINARY=/home/rohith/.cache/mongodb-binaries/mongod-x64-fedora-7.0.24 MONGOMS_VERSION=7.0.24 node --max-old-space-size=2048 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode'"
   },
   "dependencies": {
     "@verisumm/common": "*",
@@ -25,6 +25,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.7.0",
@@ -57,7 +59,9 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": ["**/dist-test/tests/**/*.test.js"],
+    "testMatch": [
+      "**/dist-test/tests/**/*.test.js"
+    ],
     "testTimeout": 30000,
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"

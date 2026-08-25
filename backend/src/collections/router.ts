@@ -6,6 +6,7 @@ import { SummarizationJobModel } from '../models/SummarizationJob.js';
 import { processSummarizationJob } from '../jobs/processor.js';
 import { enqueueSummarizationJob } from '../jobs/queue.js';
 import { AuditLogger } from '../audit/AuditLogger.js';
+import { validateBackendAccess } from '../config/deployment.js';
 
 export const collectionsRouter = Router();
 
@@ -173,6 +174,13 @@ collectionsRouter.post('/:id/summarize', async (req: Request, res: Response): Pr
       return;
     }
 
+    const modelBackend = req.body.modelBackend || 'local_clinical_model';
+    const access = validateBackendAccess(modelBackend);
+    if (!access.allowed) {
+      res.status(403).json({ error: 'Forbidden', message: access.message });
+      return;
+    }
+
     const documents = await DocumentModel.find({ collectionId: collection._id }).sort({
       uploadedAt: 1,
     });
@@ -182,7 +190,6 @@ collectionsRouter.post('/:id/summarize', async (req: Request, res: Response): Pr
       return;
     }
 
-    const modelBackend = req.body.modelBackend || 'local_clinical_model';
     const documentIds = documents.map((d) => d._id);
 
     // Create SummarizationJob

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BackendRegistry = exports.HostedLLMBackend = exports.LocalModelServiceBackend = exports.MockBackend = void 0;
 const axios_1 = __importDefault(require("axios"));
+const secrets_js_1 = require("../config/secrets.js");
 // ── Mock Backend ───────────────────────────────────────────────────────────────
 class MockBackend {
     name = 'mock';
@@ -44,7 +45,7 @@ class LocalModelServiceBackend {
     maxContextTokens = 512; // Typical for ClinicalT5 / BioBART
     serviceUrl;
     constructor() {
-        this.serviceUrl = process.env.MODEL_SERVICE_URL || 'http://localhost:8000';
+        this.serviceUrl = (0, secrets_js_1.getSecret)('MODEL_SERVICE_URL', 'http://localhost:8000');
     }
     countTokens(text) {
         // Estimator using whitespace-split
@@ -93,10 +94,10 @@ class HostedLLMBackend {
     apiKey;
     modelName;
     constructor() {
-        this.provider = process.env.LLM_PROVIDER || 'anthropic';
-        this.apiKey = process.env.LLM_API_KEY || '';
+        this.provider = (0, secrets_js_1.getSecret)('LLM_PROVIDER', 'anthropic');
+        this.apiKey = (0, secrets_js_1.getSecret)('LLM_API_KEY', '');
         this.modelName =
-            process.env.LLM_MODEL_NAME ||
+            (0, secrets_js_1.getSecret)('LLM_MODEL_NAME') ||
                 (this.provider === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-haiku-20240307');
     }
     countTokens(text) {
