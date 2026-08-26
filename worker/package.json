@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/worker/src/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "@typescript-eslint/parser": "^7.1.1",
     "eslint": "^8.57.0",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   }
 }
