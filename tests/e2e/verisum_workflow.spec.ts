@@ -54,7 +54,10 @@ ASSESSMENT & PLAN:
       const submitFeedbackBtn = page.locator('[data-testid="submit-feedback-btn"]');
       await submitFeedbackBtn.click();
 
-      // 9. Verify success confirmation banner
+      // 9. Verify time-on-task research caveat text is displayed
+      await expect(page.locator('text=Instrumentation: Time-on-task tracked for research evaluation.')).toBeVisible();
+
+      // 10. Verify success confirmation banner
       await expect(page.locator('text=Evaluation feedback recorded successfully')).toBeVisible({ timeout: 10000 });
     }
   });

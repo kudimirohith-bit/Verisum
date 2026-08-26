@@ -6,6 +6,7 @@ export interface ISummarizationJob extends MongooseDoc {
   _id: Types.ObjectId;
   documentIds: Types.ObjectId[];
   collectionId?: Types.ObjectId | null;
+  studyId?: Types.ObjectId | null;
   modelBackend: string;
   status: JobStatus;
   createdAt: Date;
@@ -25,6 +26,11 @@ const SummarizationJobSchema = new Schema<ISummarizationJob>(
     collectionId: {
       type: Schema.Types.ObjectId,
       ref: 'DocumentCollection',
+      default: null,
+    },
+    studyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Study',
       default: null,
     },
     modelBackend: {

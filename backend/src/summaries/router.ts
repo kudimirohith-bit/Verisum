@@ -50,7 +50,7 @@ router.post(
       return;
     }
 
-    const { completenessRating, correctnessRating, concisenessRating, comment } = req.body;
+    const { completenessRating, correctnessRating, concisenessRating, comment, timeOnTaskMs, studyId } = req.body;
 
     const cNum = Number(completenessRating);
     const rNum = Number(correctnessRating);
@@ -66,16 +66,25 @@ router.post(
 
     const reviewerId = req.user!.sub;
 
+    const updatePayload: Record<string, any> = {
+      summaryId: summary._id,
+      reviewerId,
+      completenessRating: cNum,
+      correctnessRating: rNum,
+      concisenessRating: sNum,
+      comment: comment ? String(comment).trim() : '',
+    };
+
+    if (timeOnTaskMs !== undefined && timeOnTaskMs !== null) {
+      updatePayload.timeOnTaskMs = Number(timeOnTaskMs);
+    }
+    if (studyId) {
+      updatePayload.studyId = studyId;
+    }
+
     const feedback = await ClinicianFeedbackModel.findOneAndUpdate(
       { summaryId: summary._id, reviewerId },
-      {
-        summaryId: summary._id,
-        reviewerId,
-        completenessRating: cNum,
-        correctnessRating: rNum,
-        concisenessRating: sNum,
-        comment: comment ? String(comment).trim() : '',
-      },
+      updatePayload,
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 

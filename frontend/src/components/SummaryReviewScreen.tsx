@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { JobStatusResponse } from '../api/client';
 import { QualityPanel } from './QualityPanel';
 import { FlaggedClaimHighlight } from './FlaggedClaimHighlight';
@@ -17,6 +17,7 @@ export const SummaryReviewScreen: React.FC<SummaryReviewScreenProps> = ({
   onBackToUpload,
 }) => {
   const [selectedChunkId, setSelectedChunkId] = useState<string | null>(null);
+  const mountedTimeRef = useRef<number>(Date.now());
 
   const summary = jobResult.summary;
   const existingFeedback = jobResult.feedback?.[0];
@@ -174,6 +175,7 @@ export const SummaryReviewScreen: React.FC<SummaryReviewScreenProps> = ({
             summaryId={summary._id}
             userRole={userRole}
             existingFeedback={existingFeedback}
+            getTimeOnTaskMs={() => Date.now() - mountedTimeRef.current}
           />
         </div>
       </div>

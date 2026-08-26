@@ -10,6 +10,7 @@ import { summariesRouter } from './summaries/index.js';
 import { auditRouter } from './audit/index.js';
 import { benchmarkRouter } from './benchmark/router.js';
 import { collectionsRouter } from './collections/router.js';
+import { studiesRouter } from './studies/router.js';
 
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -60,5 +61,6 @@ app.use('/summaries', summariesRouter);
 app.use('/audit', auditRouter);
 app.use('/benchmark', benchmarkRouter);
 app.use('/collections', collectionsRouter);
+app.use('/studies', studiesRouter);
 
 export { app };

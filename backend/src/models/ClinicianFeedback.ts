@@ -8,6 +8,8 @@ export interface IClinicianFeedback extends MongooseDoc {
   correctnessRating: number;
   concisenessRating: number;
   comment?: string;
+  timeOnTaskMs?: number;
+  studyId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +47,14 @@ const ClinicianFeedbackSchema = new Schema<IClinicianFeedback>(
     comment: {
       type: String,
       trim: true,
+    },
+    timeOnTaskMs: {
+      type: Number,
+      min: 0,
+    },
+    studyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Study',
     },
   },
   { timestamps: true },

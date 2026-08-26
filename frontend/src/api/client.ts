@@ -180,6 +180,8 @@ export async function submitClinicianFeedback(
     correctnessRating: number;
     concisenessRating: number;
     comment?: string;
+    timeOnTaskMs?: number;
+    studyId?: string;
   }
 ): Promise<{ message: string; feedback: ClinicianFeedbackData }> {
   const response = await apiClient.post<{ message: string; feedback: ClinicianFeedbackData }>(

@@ -15,6 +15,11 @@ const SummarizationJobSchema = new mongoose_1.Schema({
         ref: 'DocumentCollection',
         default: null,
     },
+    studyId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Study',
+        default: null,
+    },
     modelBackend: {
         type: String,
         required: true,

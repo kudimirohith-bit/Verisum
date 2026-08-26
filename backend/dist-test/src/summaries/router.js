@@ -42,7 +42,7 @@ router.post('/:id/feedback', middleware_js_1.requireAuth, (0, middleware_js_1.re
         res.status(404).json({ error: 'NotFound', message: 'Summary not found.' });
         return;
     }
-    const { completenessRating, correctnessRating, concisenessRating, comment } = req.body;
+    const { completenessRating, correctnessRating, concisenessRating, comment, timeOnTaskMs, studyId } = req.body;
     const cNum = Number(completenessRating);
     const rNum = Number(correctnessRating);
     const sNum = Number(concisenessRating);
@@ -54,14 +54,21 @@ router.post('/:id/feedback', middleware_js_1.requireAuth, (0, middleware_js_1.re
         return;
     }
     const reviewerId = req.user.sub;
-    const feedback = await ClinicianFeedback_js_1.ClinicianFeedbackModel.findOneAndUpdate({ summaryId: summary._id, reviewerId }, {
+    const updatePayload = {
         summaryId: summary._id,
         reviewerId,
         completenessRating: cNum,
         correctnessRating: rNum,
         concisenessRating: sNum,
         comment: comment ? String(comment).trim() : '',
-    }, { upsert: true, new: true, setDefaultsOnInsert: true });
+    };
+    if (timeOnTaskMs !== undefined && timeOnTaskMs !== null) {
+        updatePayload.timeOnTaskMs = Number(timeOnTaskMs);
+    }
+    if (studyId) {
+        updatePayload.studyId = studyId;
+    }
+    const feedback = await ClinicianFeedback_js_1.ClinicianFeedbackModel.findOneAndUpdate({ summaryId: summary._id, reviewerId }, updatePayload, { upsert: true, new: true, setDefaultsOnInsert: true });
     // Emit audit log event
     await (0, audit_js_1.logEvent)({
         eventType: 'review',

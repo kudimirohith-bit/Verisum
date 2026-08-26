@@ -6,6 +6,7 @@ interface FeedbackFormProps {
   summaryId: string;
   userRole: 'clinician' | 'researcher' | 'admin';
   existingFeedback?: ClinicianFeedbackData | null;
+  getTimeOnTaskMs?: () => number;
   onFeedbackSubmitted?: (feedback: ClinicianFeedbackData) => void;
 }
 
@@ -13,6 +14,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   summaryId,
   userRole,
   existingFeedback,
+  getTimeOnTaskMs,
   onFeedbackSubmitted,
 }) => {
   const [completeness, setCompleteness] = useState<number>(existingFeedback?.completenessRating || 5);
@@ -32,12 +34,15 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
     setSubmitting(true);
     setError(null);
 
+    const timeOnTaskMs = getTimeOnTaskMs ? getTimeOnTaskMs() : undefined;
+
     try {
       const res = await submitClinicianFeedback(summaryId, {
         completenessRating: completeness,
         correctnessRating: correctness,
         concisenessRating: conciseness,
         comment,
+        timeOnTaskMs,
       });
 
       setSubmittedData(res.feedback);
@@ -157,6 +162,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
           </button>
         )}
       </form>
+
+      <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-800/60 flex items-center justify-between">
+        <span>Instrumentation: Time-on-task tracked for research evaluation.</span>
+        <span className="italic text-slate-600">(Approximation, not clinical trial grade)</span>
+      </div>
     </div>
   );
 };

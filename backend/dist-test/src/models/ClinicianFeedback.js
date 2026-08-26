@@ -35,5 +35,13 @@ const ClinicianFeedbackSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
     },
+    timeOnTaskMs: {
+        type: Number,
+        min: 0,
+    },
+    studyId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Study',
+    },
 }, { timestamps: true });
 exports.ClinicianFeedbackModel = (0, mongoose_1.model)('ClinicianFeedback', ClinicianFeedbackSchema);
