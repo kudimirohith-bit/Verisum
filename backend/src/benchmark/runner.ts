@@ -72,7 +72,7 @@ export async function runBenchmarkSuite(
       summaryId: string;
       latencyMs: number;
       autoMetrics: AutomaticMetrics;
-      consistencyScore: number;
+      consistencyScore: number | null;
       flaggedCount: number;
     }> = [];
 
@@ -150,7 +150,7 @@ export async function runBenchmarkSuite(
       const avgRougeL = items.reduce((sum, i) => sum + i.autoMetrics.rougeL.f1, 0) / count;
       const avgBertScore = items.reduce((sum, i) => sum + i.autoMetrics.bertScore.f1, 0) / count;
       const avgEntityF1 = items.reduce((sum, i) => sum + i.autoMetrics.entityF1, 0) / count;
-      const avgConsistencyScore = items.reduce((sum, i) => sum + i.consistencyScore, 0) / count;
+      const avgConsistencyScore = items.reduce((sum, i) => sum + (i.consistencyScore ?? 0), 0) / count;
       const avgLatencyMs = items.reduce((sum, i) => sum + i.latencyMs, 0) / count;
       const flaggedClaimRate = items.reduce((sum, i) => sum + (i.flaggedCount > 0 ? 1 : 0), 0) / count;
 

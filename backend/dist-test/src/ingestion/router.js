@@ -12,6 +12,8 @@ const middleware_js_1 = require("../auth/middleware.js");
 const audit_js_1 = require("../auth/audit.js");
 const extractor_js_1 = require("./extractor.js");
 const index_js_1 = require("../deid/index.js");
+const languageDetector_js_1 = require("../deid/languageDetector.js");
+const deployment_js_1 = require("../config/deployment.js");
 // ── Multer configuration — memory storage, no disk persistence ─────────────────
 const upload = (0, multer_1.default)({
     storage: multer_1.default.memoryStorage(),
@@ -84,6 +86,19 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         res.status(422).json({ error: 'ExtractionError', message });
         return;
     }
+    // ── Detect Language & Fail-Closed Security Policy ─────────────────────────
+    const langResult = (0, languageDetector_js_1.detectLanguage)(extractedText);
+    const detectedLang = langResult.language;
+    const deploymentMode = (0, deployment_js_1.getDeploymentMode)();
+    const requireValidatedDeid = process.env.REQUIRE_VALIDATED_DEID === 'true' || deploymentMode !== 'offline';
+    if (requireValidatedDeid && !(0, languageDetector_js_1.isLanguageSupportedForDeid)(detectedLang)) {
+        res.status(422).json({
+            error: 'DEID_UNSUPPORTED_LANGUAGE',
+            message: `De-identification pipeline is not validated for language '${detectedLang}'. Document ingestion blocked under current deployment configuration.`,
+            detectedLanguage: detectedLang,
+        });
+        return;
+    }
     // ── De-identify ──────────────────────────────────────────────────────────
     let deidResult;
     try {
@@ -100,6 +115,7 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         docType: docType,
         rawText: deidResult.deidentifiedText, // de-identified only
         sourceFilename,
+        language: detectedLang,
         phiStatus: 'deidentified',
         uploadedAt: new Date(),
     });

@@ -15,6 +15,7 @@ export interface IDocument extends MongooseDoc {
   docType: DocType;
   rawText: string;
   sourceFilename: string;
+  language: string;
   uploadedAt: Date;
   phiStatus: PhiStatus;
   collectionId?: Types.ObjectId | null;
@@ -47,6 +48,11 @@ const DocumentSchema = new Schema<IDocument>(
     sourceFilename: {
       type: String,
       required: true,
+    },
+    language: {
+      type: String,
+      required: true,
+      default: 'en',
     },
     uploadedAt: {
       type: Date,

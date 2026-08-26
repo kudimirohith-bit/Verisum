@@ -7,6 +7,8 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 import { logEvent } from '../auth/audit.js';
 import { extractText, SUPPORTED_EXTENSIONS, MAX_FILE_SIZE_BYTES } from './extractor.js';
 import { deidentify } from '../deid/index.js';
+import { detectLanguage, isLanguageSupportedForDeid } from '../deid/languageDetector.js';
+import { getDeploymentMode } from '../config/deployment.js';
 import type { DocType } from '../models/Document.js';
 
 // ── Multer configuration — memory storage, no disk persistence ─────────────────
@@ -91,6 +93,22 @@ router.post(
       return;
     }
 
+    // ── Detect Language & Fail-Closed Security Policy ─────────────────────────
+    const langResult = detectLanguage(extractedText);
+    const detectedLang = langResult.language;
+
+    const deploymentMode = getDeploymentMode();
+    const requireValidatedDeid = process.env.REQUIRE_VALIDATED_DEID === 'true' || deploymentMode !== 'offline';
+
+    if (requireValidatedDeid && !isLanguageSupportedForDeid(detectedLang)) {
+      res.status(422).json({
+        error: 'DEID_UNSUPPORTED_LANGUAGE',
+        message: `De-identification pipeline is not validated for language '${detectedLang}'. Document ingestion blocked under current deployment configuration.`,
+        detectedLanguage: detectedLang,
+      });
+      return;
+    }
+
     // ── De-identify ──────────────────────────────────────────────────────────
     let deidResult;
     try {
@@ -107,6 +125,7 @@ router.post(
       docType: docType as DocType,
       rawText: deidResult.deidentifiedText, // de-identified only
       sourceFilename,
+      language: detectedLang,
       phiStatus: 'deidentified',
       uploadedAt: new Date(),
     });

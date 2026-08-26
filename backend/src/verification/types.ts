@@ -33,9 +33,10 @@ export interface ClaimVerificationResult {
 }
 
 export interface VerificationResult {
-  consistencyScore: number; // 0.0 - 1.0
+  consistencyScore: number | null; // 0.0 - 1.0 or null if unavailable
   flaggedClaims: IFlaggedClaim[];
   claimResults: ClaimVerificationResult[];
+  verificationWarning?: string;
 }
 
 export interface VerificationConfig {

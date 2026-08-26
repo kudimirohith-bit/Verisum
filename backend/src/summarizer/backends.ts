@@ -7,6 +7,7 @@ import { validateBackendAccess } from '../config/deployment.js';
 export class MockBackend implements SummarizerBackend {
   readonly name = 'mock';
   readonly maxContextTokens = 1000;
+  readonly supportedLanguages = ['en', 'es', 'fr', 'de'];
 
   countTokens(text: string): number {
     if (!text || !text.trim()) return 0;
@@ -42,6 +43,7 @@ export class MockBackend implements SummarizerBackend {
 export class LocalModelServiceBackend implements SummarizerBackend {
   readonly name = 'local_clinical_model';
   readonly maxContextTokens = 512; // Typical for ClinicalT5 / BioBART
+  readonly supportedLanguages = ['en'];
   private readonly serviceUrl: string;
 
   constructor() {
@@ -49,7 +51,6 @@ export class LocalModelServiceBackend implements SummarizerBackend {
   }
 
   countTokens(text: string): number {
-    // Estimator using whitespace-split
     if (!text || !text.trim()) return 0;
     return text.trim().split(/\s+/).length;
   }
@@ -60,7 +61,7 @@ export class LocalModelServiceBackend implements SummarizerBackend {
       const response = await axios.post(
         `${this.serviceUrl}/summarize`,
         { text, doc_type: docType },
-        { timeout: 15000 }, // 15s timeout
+        { timeout: 15000 },
       );
 
       const { summary_text, model_name, model_version } = response.data;
@@ -73,11 +74,9 @@ export class LocalModelServiceBackend implements SummarizerBackend {
         rawProviderResponse: response.data,
       };
     } catch (error: any) {
-      // In non-production or test env, or as robust fallback when service is offline
       const msg = error.response?.data?.message || error.message;
       console.warn(`[LocalModelService] HTTP call failed: ${msg}. Using local fallback.`);
 
-      // Robust fallback sentence extraction
       const sentences = text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
       const summaryText =
         sentences.length > 2
@@ -99,6 +98,7 @@ export class LocalModelServiceBackend implements SummarizerBackend {
 export class HostedLLMBackend implements SummarizerBackend {
   readonly name = 'hosted_llm';
   readonly maxContextTokens = 4096;
+  readonly supportedLanguages = ['en', 'es', 'fr', 'de', 'zh'];
   private readonly provider: string;
   private readonly apiKey: string;
   private readonly modelName: string;
@@ -112,7 +112,6 @@ export class HostedLLMBackend implements SummarizerBackend {
   }
 
   countTokens(text: string): number {
-    // Standard LLM token approximation: ~4 chars or 0.75 words per token
     if (!text) return 0;
     const wordCount = text.trim().split(/\s+/).length;
     return Math.ceil(wordCount * 1.33);
@@ -135,7 +134,7 @@ export class HostedLLMBackend implements SummarizerBackend {
       try {
         if (this.provider === 'openai') {
           const response = await axios.post(
-            'https://api.openai.com/v1/chat/completypes',
+            'https://api.openai.com/v1/chat/completions',
             {
               model: this.modelName,
               messages: [
@@ -164,7 +163,6 @@ export class HostedLLMBackend implements SummarizerBackend {
             rawProviderResponse: response.data,
           };
         } else {
-          // Anthropic default
           const response = await axios.post(
             'https://api.anthropic.com/v1/messages',
             {
@@ -198,7 +196,6 @@ export class HostedLLMBackend implements SummarizerBackend {
           `[HostedLLM] Attempt ${attempts} failed (status: ${status}, msg: ${error.message})`,
         );
 
-        // Exponential backoff before retry (e.g. 500ms, 1000ms)
         if (attempts < maxAttempts) {
           await new Promise((resolve) => setTimeout(resolve, attempts * 500));
         }
@@ -237,13 +234,27 @@ export class BackendRegistry {
 
   /**
    * Returns a SummarizerBackend by its string identifier.
-   * Standard keys: "mock", "local_clinical_model", "hosted_llm".
    */
   static get(backendId: string): SummarizerBackend {
     const backend = this.instances[backendId];
     if (!backend) {
       console.warn(`[BackendRegistry] Unknown backend: "${backendId}". Defaulting to "mock".`);
       return this.instances.mock;
+    }
+    return backend;
+  }
+
+  /**
+   * Returns a backend after checking that it supports the document's language.
+   * Throws an Error if the backend does not support the specified language.
+   */
+  static getForLanguage(backendId: string, language: string = 'en'): SummarizerBackend {
+    const backend = this.get(backendId);
+    const lang = (language || 'en').toLowerCase().trim();
+    if (!backend.supportedLanguages.includes(lang) && !backend.supportedLanguages.includes('*')) {
+      throw new Error(
+        `Backend '${backendId}' does not support document language '${language}'. Supported languages for '${backendId}': ${backend.supportedLanguages.join(', ')}.`,
+      );
     }
     return backend;
   }

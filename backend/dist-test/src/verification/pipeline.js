@@ -15,7 +15,16 @@ class VerificationPipeline {
     /**
      * Run multi-strategy verification pipeline over a summary text against source chunks.
      */
-    async verify(summaryText, sourceChunks, docType = 'ehr_note') {
+    async verify(summaryText, sourceChunks, docType = 'ehr_note', language = 'en') {
+        const lang = (language || 'en').toLowerCase().trim();
+        if (lang !== 'en' && lang !== 'en-us' && lang !== 'en-gb') {
+            return {
+                consistencyScore: null,
+                flaggedClaims: [],
+                claimResults: [],
+                verificationWarning: `Automated fact verification model is currently unavailable for language '${language}'. Please review summary manually with extra caution.`,
+            };
+        }
         if (!summaryText || !summaryText.trim()) {
             return {
                 consistencyScore: 1.0,

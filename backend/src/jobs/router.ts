@@ -7,6 +7,7 @@ import { enqueueSummarizationJob } from './queue.js';
 import { processSummarizationJob } from './processor.js';
 import { logEvent } from '../auth/audit.js';
 import { validateBackendAccess } from '../config/deployment.js';
+import { BackendRegistry } from '../summarizer/backends.js';
 
 const router = Router();
 
@@ -42,6 +43,19 @@ router.post(
         message: 'One or more of the specified documents do not exist.',
       });
       return;
+    }
+
+    // Validate backend language support for all target documents
+    for (const doc of documents) {
+      try {
+        BackendRegistry.getForLanguage(modelBackend, doc.language || 'en');
+      } catch (err: any) {
+        res.status(400).json({
+          error: 'UNSUPPORTED_BACKEND_LANGUAGE',
+          message: err.message,
+        });
+        return;
+      }
     }
 
     // Create the job

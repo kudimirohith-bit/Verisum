@@ -26,7 +26,18 @@ export class VerificationPipeline {
     summaryText: string,
     sourceChunks: SourceChunk[],
     docType: string = 'ehr_note',
+    language: string = 'en',
   ): Promise<VerificationResult> {
+    const lang = (language || 'en').toLowerCase().trim();
+    if (lang !== 'en' && lang !== 'en-us' && lang !== 'en-gb') {
+      return {
+        consistencyScore: null,
+        flaggedClaims: [],
+        claimResults: [],
+        verificationWarning: `Automated fact verification model is currently unavailable for language '${language}'. Please review summary manually with extra caution.`,
+      };
+    }
+
     if (!summaryText || !summaryText.trim()) {
       return {
         consistencyScore: 1.0,

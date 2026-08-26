@@ -27,6 +27,11 @@ const DocumentSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    language: {
+        type: String,
+        required: true,
+        default: 'en',
+    },
     uploadedAt: {
         type: Date,
         default: () => new Date(),

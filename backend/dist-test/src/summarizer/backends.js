@@ -10,6 +10,7 @@ const secrets_js_1 = require("../config/secrets.js");
 class MockBackend {
     name = 'mock';
     maxContextTokens = 1000;
+    supportedLanguages = ['en', 'es', 'fr', 'de'];
     countTokens(text) {
         if (!text || !text.trim())
             return 0;
@@ -43,12 +44,12 @@ exports.MockBackend = MockBackend;
 class LocalModelServiceBackend {
     name = 'local_clinical_model';
     maxContextTokens = 512; // Typical for ClinicalT5 / BioBART
+    supportedLanguages = ['en'];
     serviceUrl;
     constructor() {
         this.serviceUrl = (0, secrets_js_1.getSecret)('MODEL_SERVICE_URL', 'http://localhost:8000');
     }
     countTokens(text) {
-        // Estimator using whitespace-split
         if (!text || !text.trim())
             return 0;
         return text.trim().split(/\s+/).length;
@@ -67,10 +68,8 @@ class LocalModelServiceBackend {
             };
         }
         catch (error) {
-            // In non-production or test env, or as robust fallback when service is offline
             const msg = error.response?.data?.message || error.message;
             console.warn(`[LocalModelService] HTTP call failed: ${msg}. Using local fallback.`);
-            // Robust fallback sentence extraction
             const sentences = text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
             const summaryText = sentences.length > 2
                 ? `Fallback Summary: ${sentences.slice(0, 2).join('. ')}.`
@@ -90,6 +89,7 @@ exports.LocalModelServiceBackend = LocalModelServiceBackend;
 class HostedLLMBackend {
     name = 'hosted_llm';
     maxContextTokens = 4096;
+    supportedLanguages = ['en', 'es', 'fr', 'de', 'zh'];
     provider;
     apiKey;
     modelName;
@@ -101,7 +101,6 @@ class HostedLLMBackend {
                 (this.provider === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-haiku-20240307');
     }
     countTokens(text) {
-        // Standard LLM token approximation: ~4 chars or 0.75 words per token
         if (!text)
             return 0;
         const wordCount = text.trim().split(/\s+/).length;
@@ -120,7 +119,7 @@ class HostedLLMBackend {
             attempts++;
             try {
                 if (this.provider === 'openai') {
-                    const response = await axios_1.default.post('https://api.openai.com/v1/chat/completypes', {
+                    const response = await axios_1.default.post('https://api.openai.com/v1/chat/completions', {
                         model: this.modelName,
                         messages: [
                             {
@@ -146,7 +145,6 @@ class HostedLLMBackend {
                     };
                 }
                 else {
-                    // Anthropic default
                     const response = await axios_1.default.post('https://api.anthropic.com/v1/messages', {
                         model: this.modelName,
                         max_tokens: 1024,
@@ -173,7 +171,6 @@ class HostedLLMBackend {
                 lastError = error;
                 const status = error.response?.status;
                 console.warn(`[HostedLLM] Attempt ${attempts} failed (status: ${status}, msg: ${error.message})`);
-                // Exponential backoff before retry (e.g. 500ms, 1000ms)
                 if (attempts < maxAttempts) {
                     await new Promise((resolve) => setTimeout(resolve, attempts * 500));
                 }
@@ -204,13 +201,24 @@ class BackendRegistry {
     };
     /**
      * Returns a SummarizerBackend by its string identifier.
-     * Standard keys: "mock", "local_clinical_model", "hosted_llm".
      */
     static get(backendId) {
         const backend = this.instances[backendId];
         if (!backend) {
             console.warn(`[BackendRegistry] Unknown backend: "${backendId}". Defaulting to "mock".`);
             return this.instances.mock;
+        }
+        return backend;
+    }
+    /**
+     * Returns a backend after checking that it supports the document's language.
+     * Throws an Error if the backend does not support the specified language.
+     */
+    static getForLanguage(backendId, language = 'en') {
+        const backend = this.get(backendId);
+        const lang = (language || 'en').toLowerCase().trim();
+        if (!backend.supportedLanguages.includes(lang) && !backend.supportedLanguages.includes('*')) {
+            throw new Error(`Backend '${backendId}' does not support document language '${language}'. Supported languages for '${backendId}': ${backend.supportedLanguages.join(', ')}.`);
         }
         return backend;
     }

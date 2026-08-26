@@ -82,11 +82,18 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
       text: d.rawText,
       sourceFilename: d.sourceFilename,
     }));
-    const verificationResult = await pipeline.verify(result.finalSummary, sourceChunks, docType);
+    const docLanguage = documents[0].language || 'en';
+    const verificationResult = await pipeline.verify(result.finalSummary, sourceChunks, docType, docLanguage);
 
     // Update Summary with verification metrics
     summary.consistencyScore = verificationResult.consistencyScore;
     summary.flaggedClaims = verificationResult.flaggedClaims;
+    if (verificationResult.verificationWarning) {
+      summary.automaticMetrics = {
+        ...summary.automaticMetrics,
+        verificationWarning: verificationResult.verificationWarning,
+      };
+    }
     await summary.save();
 
     // 9. Update job status to completed after verification succeeds

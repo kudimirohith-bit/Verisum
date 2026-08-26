@@ -9,6 +9,7 @@ const middleware_js_1 = require("../auth/middleware.js");
 const queue_js_1 = require("./queue.js");
 const audit_js_1 = require("../auth/audit.js");
 const deployment_js_1 = require("../config/deployment.js");
+const backends_js_1 = require("../summarizer/backends.js");
 const router = (0, express_1.Router)();
 exports.jobsRouter = router;
 /**
@@ -36,6 +37,19 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
             message: 'One or more of the specified documents do not exist.',
         });
         return;
+    }
+    // Validate backend language support for all target documents
+    for (const doc of documents) {
+        try {
+            backends_js_1.BackendRegistry.getForLanguage(modelBackend, doc.language || 'en');
+        }
+        catch (err) {
+            res.status(400).json({
+                error: 'UNSUPPORTED_BACKEND_LANGUAGE',
+                message: err.message,
+            });
+            return;
+        }
     }
     // Create the job
     const job = await SummarizationJob_js_1.SummarizationJobModel.create({
