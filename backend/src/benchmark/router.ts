@@ -6,7 +6,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { Types } from 'mongoose';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { BenchmarkRunModel } from '../models/BenchmarkRun.js';
 import { runBenchmarkSuite, getSummaryEvaluationPairs } from './runner.js';
@@ -201,7 +200,7 @@ benchmarkRouter.post(
         try {
           await ClinicianFeedbackModel.create({
             summaryId: summary._id,
-            reviewerId: new Types.ObjectId(),
+            reviewerId,
             completenessRating,
             correctnessRating,
             concisenessRating,

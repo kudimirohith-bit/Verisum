@@ -198,7 +198,7 @@ async function runBenchmarkSuite(options = {}) {
     }
     catch (error) {
         benchmarkRun.status = 'failed';
-        benchmarkRun.error = error.message;
+        benchmarkRun.error = error instanceof Error ? error.message : String(error);
         await benchmarkRun.save();
         throw error;
     }
@@ -225,7 +225,7 @@ async function getSummaryEvaluationPairs() {
             summaryId: s._id.toString(),
             modelBackend: job ? job.modelBackend : 'unknown',
             docType: doc ? doc.docType : 'ehr_note',
-            automaticMetrics: s.automaticMetrics || {},
+            automaticMetrics: s.automaticMetrics,
             consistencyScore: s.consistencyScore ?? 1.0,
             feedback: {
                 completeness: Number(avgCompleteness.toFixed(2)),

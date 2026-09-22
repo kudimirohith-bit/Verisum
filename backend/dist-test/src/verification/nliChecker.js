@@ -61,7 +61,7 @@ class NLIConsistencyChecker {
                 verdict: verdict,
             };
         }
-        catch (error) {
+        catch {
             // Local fallback implementation if model-service is unavailable
             return this.localNLIFallback(premise, hypothesis);
         }

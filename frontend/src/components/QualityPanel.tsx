@@ -27,10 +27,18 @@ export const QualityPanel: React.FC<QualityPanelProps> = ({ summary }) => {
     }
   }
 
-  const modelName = summary.automaticMetrics?.modelName || 'Standard Backend';
-  const latency = summary.automaticMetrics?.latencyMs ? `${summary.automaticMetrics.latencyMs} ms` : 'N/A';
-  const rougeL = summary.automaticMetrics?.rougeL !== undefined ? `${(summary.automaticMetrics.rougeL * 100).toFixed(1)}%` : '0.84';
-  const bertScore = summary.automaticMetrics?.bertScore !== undefined ? `${(summary.automaticMetrics.bertScore * 100).toFixed(1)}%` : '0.89';
+  const modelName = typeof summary.automaticMetrics?.modelName === 'string'
+    ? summary.automaticMetrics.modelName
+    : 'Standard Backend';
+  const latency = typeof summary.automaticMetrics?.latencyMs === 'number'
+    ? `${summary.automaticMetrics.latencyMs} ms`
+    : 'N/A';
+  const rougeL = typeof summary.automaticMetrics?.rougeL === 'number'
+    ? `${(summary.automaticMetrics.rougeL * 100).toFixed(1)}%`
+    : '0.84';
+  const bertScore = typeof summary.automaticMetrics?.bertScore === 'number'
+    ? `${(summary.automaticMetrics.bertScore * 100).toFixed(1)}%`
+    : '0.89';
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md p-6 shadow-xl space-y-5">
@@ -96,11 +104,11 @@ export const QualityPanel: React.FC<QualityPanelProps> = ({ summary }) => {
       </div>
 
       {/* Verification Warning Banner for Unsupported Languages */}
-      {summary.automaticMetrics?.verificationWarning && (
+      {Boolean(summary.automaticMetrics?.verificationWarning) && (
         <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-200 text-xs flex items-center gap-2.5">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <strong>Verification Warning:</strong> {summary.automaticMetrics.verificationWarning as string}
+            <strong>Verification Warning:</strong> {summary.automaticMetrics?.verificationWarning}
           </span>
         </div>
       )}

@@ -40,7 +40,7 @@ export async function enqueueSummarizationJob(jobId: string): Promise<void> {
   try {
     await summarizationQueue.add('summarize', { jobId });
     console.log(`[Queue] Job ${jobId} enqueued successfully.`);
-  } catch (err: any) {
-    console.warn(`[Queue] Failed to enqueue job: ${err.message}`);
+  } catch (err: unknown) {
+    console.warn(`[Queue] Failed to enqueue job: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

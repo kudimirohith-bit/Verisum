@@ -10,6 +10,7 @@ const processor_js_1 = require("../jobs/processor.js");
 const queue_js_1 = require("../jobs/queue.js");
 const AuditLogger_js_1 = require("../audit/AuditLogger.js");
 const deployment_js_1 = require("../config/deployment.js");
+const errors_js_1 = require("../utils/errors.js");
 exports.collectionsRouter = (0, express_1.Router)();
 // Apply auth middleware to all collection routes
 exports.collectionsRouter.use(middleware_js_1.requireAuth);
@@ -45,7 +46,7 @@ exports.collectionsRouter.post('/', async (req, res) => {
     }
     catch (error) {
         console.error('Error creating collection:', error);
-        res.status(500).json({ message: error.message || 'Internal server error' });
+        res.status(500).json({ message: (0, errors_js_1.getErrorMessage)(error) || 'Internal server error' });
     }
 });
 /**
@@ -70,7 +71,7 @@ exports.collectionsRouter.get('/', async (req, res) => {
     }
     catch (error) {
         console.error('Error listing collections:', error);
-        res.status(500).json({ message: error.message || 'Internal server error' });
+        res.status(500).json({ message: (0, errors_js_1.getErrorMessage)(error) || 'Internal server error' });
     }
 });
 /**
@@ -91,7 +92,7 @@ exports.collectionsRouter.get('/:id', async (req, res) => {
     }
     catch (error) {
         console.error('Error fetching collection:', error);
-        res.status(500).json({ message: error.message || 'Internal server error' });
+        res.status(500).json({ message: (0, errors_js_1.getErrorMessage)(error) || 'Internal server error' });
     }
 });
 /**
@@ -140,7 +141,7 @@ exports.collectionsRouter.post('/:id/documents', async (req, res) => {
     }
     catch (error) {
         console.error('Error attaching documents to collection:', error);
-        res.status(500).json({ message: error.message || 'Internal server error' });
+        res.status(500).json({ message: (0, errors_js_1.getErrorMessage)(error) || 'Internal server error' });
     }
 });
 /**
@@ -202,6 +203,6 @@ exports.collectionsRouter.post('/:id/summarize', async (req, res) => {
     }
     catch (error) {
         console.error('Error triggering collection summarization:', error);
-        res.status(500).json({ message: error.message || 'Internal server error' });
+        res.status(500).json({ message: (0, errors_js_1.getErrorMessage)(error) || 'Internal server error' });
     }
 });

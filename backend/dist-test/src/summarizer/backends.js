@@ -68,7 +68,8 @@ class LocalModelServiceBackend {
             };
         }
         catch (error) {
-            const msg = error.response?.data?.message || error.message;
+            const axiosError = error;
+            const msg = axiosError.response?.data?.message || axiosError.message || 'Unknown error';
             console.warn(`[LocalModelService] HTTP call failed: ${msg}. Using local fallback.`);
             const sentences = text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
             const summaryText = sentences.length > 2
@@ -203,9 +204,10 @@ class HostedLLMBackend {
                 }
             }
             catch (error) {
-                lastError = error;
-                const status = error.response?.status;
-                console.warn(`[HostedLLM] Attempt ${attempts} failed (status: ${status}, msg: ${error.message})`);
+                lastError = error instanceof Error ? error : new Error(String(error));
+                const axiosError = error;
+                const status = axiosError.response?.status;
+                console.warn(`[HostedLLM] Attempt ${attempts} failed (status: ${status}, msg: ${lastError.message})`);
                 if (attempts < maxAttempts) {
                     await new Promise((resolve) => setTimeout(resolve, attempts * 500));
                 }

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EntityGroundingChecker = void 0;
 class EntityGroundingChecker {
     name = 'entity_grounding';
-    async verifyClaims(claims, sourceChunks, config) {
+    async verifyClaims(claims, sourceChunks, _config) {
         const results = [];
         for (const claim of claims) {
             let premise = '';

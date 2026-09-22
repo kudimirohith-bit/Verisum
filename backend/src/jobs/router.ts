@@ -7,6 +7,7 @@ import { enqueueSummarizationJob } from './queue.js';
 import { logEvent } from '../auth/audit.js';
 import { validateBackendAccess } from '../config/deployment.js';
 import { BackendRegistry } from '../summarizer/backends.js';
+import { getErrorMessage } from '../utils/errors.js';
 
 const router = Router();
 
@@ -48,10 +49,10 @@ router.post(
     for (const doc of documents) {
       try {
         BackendRegistry.getForLanguage(modelBackend, doc.language || 'en');
-      } catch (err: any) {
+      } catch (err: unknown) {
         res.status(400).json({
           error: 'UNSUPPORTED_BACKEND_LANGUAGE',
-          message: err.message,
+          message: getErrorMessage(err),
         });
         return;
       }
@@ -67,12 +68,12 @@ router.post(
     // Enqueue the job onto BullMQ
     try {
       await enqueueSummarizationJob(job._id.toString());
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Rollback job creation on enqueue failure
       await SummarizationJobModel.findByIdAndDelete(job._id);
       res.status(500).json({
         error: 'QueueError',
-        message: `Failed to enqueue summarization job: ${err.message}`,
+        message: `Failed to enqueue summarization job: ${getErrorMessage(err)}`,
       });
       return;
     }

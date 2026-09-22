@@ -219,10 +219,15 @@ async function computeAutomaticMetrics(summaryText, referenceText) {
         const rL = await new RougeLMetric().compute(summaryText, referenceText);
         const bert = await new BertScoreMetric().compute(summaryText, referenceText);
         const ent = await new EntityF1Metric().compute(summaryText, referenceText);
-        const rouge1 = r1.details;
-        const rouge2 = r2.details;
-        const rougeL = rL.details;
-        const bertScore = bert.details;
+        const toScoreDetails = (d) => ({
+            precision: d?.precision ?? 0,
+            recall: d?.recall ?? 0,
+            f1: d?.f1 ?? 0,
+        });
+        const rouge1 = toScoreDetails(r1.details);
+        const rouge2 = toScoreDetails(r2.details);
+        const rougeL = toScoreDetails(rL.details);
+        const bertScore = toScoreDetails(bert.details);
         const entityF1 = ent.score;
         const overall = Number(((rouge1.f1 + rouge2.f1 + rougeL.f1 + bertScore.f1 + entityF1) / 5).toFixed(4));
         return {

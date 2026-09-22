@@ -2,10 +2,10 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { StudyModel } from '../models/Study.js';
 import { SummarizationJobModel } from '../models/SummarizationJob.js';
-import { DocumentModel } from '../models/Document.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { computeStudyResults } from './runner.js';
 import { logEvent } from '../auth/audit.js';
+import { getErrorMessage } from '../utils/errors.js';
 
 const router = Router();
 
@@ -62,7 +62,7 @@ router.post(
     });
 
     await logEvent({
-      eventType: 'study_created' as any,
+      eventType: 'study_created',
       actorId: req.user!.sub,
       requestId: req.requestId,
       payload: {
@@ -182,8 +182,8 @@ router.get(
     try {
       const results = await computeStudyResults(id);
       res.json({ results });
-    } catch (err: any) {
-      res.status(404).json({ error: 'NotFound', message: err.message });
+    } catch (err: unknown) {
+      res.status(404).json({ error: 'NotFound', message: getErrorMessage(err) });
     }
   },
 );

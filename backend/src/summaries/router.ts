@@ -66,7 +66,18 @@ router.post(
 
     const reviewerId = req.user!.sub;
 
-    const updatePayload: Record<string, any> = {
+    interface FeedbackPayload {
+      summaryId: unknown;
+      reviewerId: string;
+      completenessRating: number;
+      correctnessRating: number;
+      concisenessRating: number;
+      comment: string;
+      timeOnTaskMs?: number;
+      studyId?: string;
+    }
+
+    const updatePayload: FeedbackPayload = {
       summaryId: summary._id,
       reviewerId,
       completenessRating: cNum,

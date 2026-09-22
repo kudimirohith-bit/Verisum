@@ -10,6 +10,7 @@ const queue_js_1 = require("./queue.js");
 const audit_js_1 = require("../auth/audit.js");
 const deployment_js_1 = require("../config/deployment.js");
 const backends_js_1 = require("../summarizer/backends.js");
+const errors_js_1 = require("../utils/errors.js");
 const router = (0, express_1.Router)();
 exports.jobsRouter = router;
 /**
@@ -46,7 +47,7 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         catch (err) {
             res.status(400).json({
                 error: 'UNSUPPORTED_BACKEND_LANGUAGE',
-                message: err.message,
+                message: (0, errors_js_1.getErrorMessage)(err),
             });
             return;
         }
@@ -66,7 +67,7 @@ router.post('/', middleware_js_1.requireAuth, (0, middleware_js_1.requireRole)('
         await SummarizationJob_js_1.SummarizationJobModel.findByIdAndDelete(job._id);
         res.status(500).json({
             error: 'QueueError',
-            message: `Failed to enqueue summarization job: ${err.message}`,
+            message: `Failed to enqueue summarization job: ${(0, errors_js_1.getErrorMessage)(err)}`,
         });
         return;
     }

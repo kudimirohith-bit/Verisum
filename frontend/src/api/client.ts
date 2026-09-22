@@ -133,7 +133,8 @@ export interface SummaryData {
     chunkCount?: number;
     rougeL?: number;
     bertScore?: number;
-    [key: string]: any;
+    verificationWarning?: string;
+    [key: string]: unknown;
   };
   createdAt: string;
 }
@@ -199,7 +200,7 @@ export interface AuditLogEntry {
   jobId?: string;
   summaryId?: string;
   requestId?: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -314,4 +315,14 @@ export async function summarizeCollection(
 ): Promise<{ jobId: string }> {
   const response = await apiClient.post(`/collections/${id}/summarize`, { modelBackend });
   return response.data;
+}
+
+export function getApiErrorMessage(err: unknown, fallback = 'An unexpected error occurred'): string {
+  if (axios.isAxiosError(err)) {
+    return err.response?.data?.message || err.response?.data?.error || err.message || fallback;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return fallback;
 }

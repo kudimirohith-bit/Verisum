@@ -119,7 +119,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-slate-400">Role:</span>
             <select
               value={userRole}
-              onChange={(e) => setUserRole(e.target.value as any)}
+              onChange={(e) => setUserRole(e.target.value as 'clinician' | 'researcher' | 'admin')}
               className="bg-transparent text-slate-200 font-bold focus:outline-none cursor-pointer text-xs"
               data-testid="role-selector"
             >

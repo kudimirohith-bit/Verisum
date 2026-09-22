@@ -1,4 +1,5 @@
 import { Schema, model, Document as MongooseDoc, Types } from 'mongoose';
+import { MetricHumanCorrelation } from '../benchmark/stats.js';
 
 export interface IBackendBenchmarkResult {
   modelBackend: string;
@@ -27,7 +28,7 @@ export interface IBenchmarkRun extends MongooseDoc {
     docType?: string;
   };
   resultsPerBackend: IBackendBenchmarkResult[];
-  correlationStats: any[];
+  correlationStats: MetricHumanCorrelation[];
   reportMarkdown?: string;
   error?: string;
   createdAt: Date;

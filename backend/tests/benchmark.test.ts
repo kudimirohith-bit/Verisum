@@ -20,6 +20,14 @@ import { pearsonCorrelation, spearmanCorrelation, computeCorrelationStats } from
 import { runBenchmarkSuite } from '../src/benchmark/runner.js';
 import { signAccessToken } from '../src/auth/tokens.js';
 
+// Allow all backends (including hosted_llm) in this integration test.
+// The deployment guard is tested separately in deploymentMode.test.ts.
+jest.mock('../src/config/deployment.js', () => ({
+  validateBackendAccess: jest.fn().mockReturnValue({ allowed: true }),
+  getDeploymentMode: jest.fn().mockReturnValue('hybrid'),
+  isOfflineMode: jest.fn().mockReturnValue(false),
+}));
+
 let mongoServer: MongoMemoryServer;
 let adminToken: string;
 let researcherToken: string;

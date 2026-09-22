@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { uploadDocument, createSummarizationJob } from '../api/client';
+import { uploadDocument, createSummarizationJob, getApiErrorMessage } from '../api/client';
 import { FileUp, Sparkles, Check, Stethoscope, FileText, Layers } from 'lucide-react';
 
 interface UploadScreenProps {
@@ -71,8 +71,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onJobsCreated }) => 
       }
 
       onJobsCreated(createdJobIds);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Document upload/job creation failed.');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Document upload/job creation failed.'));
     } finally {
       setLoading(false);
     }

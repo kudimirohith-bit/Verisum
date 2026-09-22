@@ -9,7 +9,7 @@ class LLMJudgeChecker {
         // Uses HostedLLMBackend under the hood
         this.llmBackend = new backends_js_1.HostedLLMBackend();
     }
-    async verifyClaims(claims, sourceChunks, config) {
+    async verifyClaims(claims, sourceChunks, _config) {
         const results = [];
         for (const claim of claims) {
             let premise = '';
@@ -51,7 +51,7 @@ Respond in 1 line: "Verdict: <entailment|contradiction|neutral> | Reason: <brief
                     strategy: 'llm_judge',
                 });
             }
-            catch (err) {
+            catch {
                 results.push({
                     claim,
                     verdict: 'entailment',

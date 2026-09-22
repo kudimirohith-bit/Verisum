@@ -8,7 +8,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.benchmarkRouter = void 0;
 const express_1 = require("express");
-const mongoose_1 = require("mongoose");
 const middleware_js_1 = require("../auth/middleware.js");
 const BenchmarkRun_js_1 = require("../models/BenchmarkRun.js");
 const runner_js_1 = require("./runner.js");
@@ -162,10 +161,9 @@ exports.benchmarkRouter.post('/seed-synthetic-feedback', middleware_js_1.require
             const correctnessRating = isGoodBackend ? 4 + (i % 2) : 2 + (i % 3);
             const concisenessRating = 3 + (i % 3);
             try {
-                const synthReviewerId = new mongoose_1.Types.ObjectId();
                 await ClinicianFeedback_js_1.ClinicianFeedbackModel.create({
                     summaryId: summary._id,
-                    reviewerId: synthReviewerId,
+                    reviewerId,
                     completenessRating,
                     correctnessRating,
                     concisenessRating,

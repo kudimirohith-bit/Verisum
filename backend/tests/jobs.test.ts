@@ -11,6 +11,14 @@ import { AuditLogModel } from '../src/models/AuditLog';
 import { signAccessToken } from '../src/auth/tokens';
 import { processSummarizationJob } from '../src/jobs/processor';
 
+// Allow all backends (including hosted_llm) in this integration test.
+// The deployment guard is tested separately in deploymentMode.test.ts.
+jest.mock('../src/config/deployment', () => ({
+  validateBackendAccess: jest.fn().mockReturnValue({ allowed: true }),
+  getDeploymentMode: jest.fn().mockReturnValue('hybrid'),
+  isOfflineMode: jest.fn().mockReturnValue(false),
+}));
+
 // ── Mock BullMQ Queue to run Worker processor inline in the test thread ───────
 jest.mock('../src/jobs/queue', () => ({
   enqueueSummarizationJob: jest.fn().mockImplementation(async (jobId: string) => {

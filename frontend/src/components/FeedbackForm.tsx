@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { submitClinicianFeedback, ClinicianFeedbackData } from '../api/client';
+import { submitClinicianFeedback, ClinicianFeedbackData, getApiErrorMessage } from '../api/client';
 import { Star, MessageSquare, CheckCircle2, Lock, Send, AlertCircle } from 'lucide-react';
 
 interface FeedbackFormProps {
@@ -49,8 +49,8 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       if (onFeedbackSubmitted) {
         onFeedbackSubmitted(res.feedback);
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to submit feedback.');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to submit feedback.'));
     } finally {
       setSubmitting(false);
     }

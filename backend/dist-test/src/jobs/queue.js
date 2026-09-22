@@ -46,6 +46,6 @@ async function enqueueSummarizationJob(jobId) {
         console.log(`[Queue] Job ${jobId} enqueued successfully.`);
     }
     catch (err) {
-        console.warn(`[Queue] Failed to enqueue job: ${err.message}`);
+        console.warn(`[Queue] Failed to enqueue job: ${err instanceof Error ? err.message : String(err)}`);
     }
 }

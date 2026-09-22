@@ -38,8 +38,7 @@ jobs:
         run: npm run build --workspace=@verisumm/common
 
       - name: Lint Codebase & Type Check
-        run: |
-          npm run lint || true
+        run: npm run lint
 
       - name: Run Backend Unit & Integration Tests with Coverage Thresholds
         env:

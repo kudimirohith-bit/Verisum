@@ -26,7 +26,7 @@ class TextChunker {
      * Splits a single document string into Chunk objects.
      */
     chunk(text, docId = 'doc-0') {
-        const { maxTokensPerChunk, overlapTokens, countTokens } = this.opts;
+        const { maxTokensPerChunk, countTokens } = this.opts;
         // If the whole text fits in one chunk — return immediately (no chunking needed)
         const totalTokens = countTokens(text);
         if (totalTokens <= maxTokensPerChunk) {

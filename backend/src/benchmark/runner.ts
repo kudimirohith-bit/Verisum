@@ -244,9 +244,9 @@ export async function runBenchmarkSuite(
     });
 
     return benchmarkRun;
-  } catch (error: any) {
+  } catch (error: unknown) {
     benchmarkRun.status = 'failed';
-    benchmarkRun.error = error.message;
+    benchmarkRun.error = error instanceof Error ? error.message : String(error);
     await benchmarkRun.save();
     throw error;
   }
@@ -281,7 +281,7 @@ export async function getSummaryEvaluationPairs(): Promise<SummaryEvaluationPair
       summaryId: s._id.toString(),
       modelBackend: job ? job.modelBackend : 'unknown',
       docType: doc ? doc.docType : 'ehr_note',
-      automaticMetrics: (s.automaticMetrics as any) || {},
+      automaticMetrics: s.automaticMetrics as unknown as AutomaticMetrics,
       consistencyScore: s.consistencyScore ?? 1.0,
       feedback: {
         completeness: Number(avgCompleteness.toFixed(2)),

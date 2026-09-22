@@ -6,8 +6,9 @@ import { AuditLogger } from '../audit/AuditLogger.js';
 import { BackendRegistry } from '../summarizer/backends.js';
 import { HierarchicalSummarizer } from '../chunking/HierarchicalSummarizer.js';
 import { VerificationPipeline } from '../verification/index.js';
+import { getErrorMessage } from '../utils/errors.js';
 
-export async function processSummarizationJob(jobId: string): Promise<any> {
+export async function processSummarizationJob(jobId: string): Promise<{ summaryId: unknown }> {
   console.log(`[Worker Processor] Starting job ${jobId}`);
 
   // 1. Fetch the summarization job from database
@@ -129,7 +130,7 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
 
     console.log(`[Worker Processor] Job ${jobId} verification completed. Status: completed.`);
     return { summaryId: summary._id };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[Worker Processor] Job ${jobId} failed:`, error);
     job.status = 'failed';
     await job.save();
@@ -140,7 +141,7 @@ export async function processSummarizationJob(jobId: string): Promise<any> {
       jobId: job._id.toString(),
       payload: {
         action: 'job_failed',
-        error: error.message,
+        error: getErrorMessage(error),
       },
     });
 

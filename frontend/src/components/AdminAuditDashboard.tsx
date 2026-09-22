@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getAuditLogs, getAuditMetrics, exportAuditLogs, AuditLogEntry, AuditMetricsResponse } from '../api/client';
+import {
+  getAuditLogs,
+  getAuditMetrics,
+  exportAuditLogs,
+  AuditLogEntry,
+  AuditMetricsResponse,
+  getApiErrorMessage,
+} from '../api/client';
 import { BarChart3, ShieldCheck, Download, Filter, Search, ChevronLeft, ChevronRight, Activity, Cpu, AlertTriangle, FileText, Lock } from 'lucide-react';
 
 interface AdminAuditDashboardProps {
@@ -41,8 +48,8 @@ export const AdminAuditDashboard: React.FC<AdminAuditDashboardProps> = ({ userRo
       setLogs(logsRes.logs);
       setTotalPages(logsRes.pages);
       setTotalLogs(logsRes.total);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch audit metrics.');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to fetch audit metrics.'));
     } finally {
       setLoading(false);
     }

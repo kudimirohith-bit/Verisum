@@ -22,6 +22,13 @@ const metrics_js_1 = require("../src/benchmark/metrics.js");
 const stats_js_1 = require("../src/benchmark/stats.js");
 const runner_js_1 = require("../src/benchmark/runner.js");
 const tokens_js_1 = require("../src/auth/tokens.js");
+// Allow all backends (including hosted_llm) in this integration test.
+// The deployment guard is tested separately in deploymentMode.test.ts.
+jest.mock('../src/config/deployment.js', () => ({
+    validateBackendAccess: jest.fn().mockReturnValue({ allowed: true }),
+    getDeploymentMode: jest.fn().mockReturnValue('hybrid'),
+    isOfflineMode: jest.fn().mockReturnValue(false),
+}));
 let mongoServer;
 let adminToken;
 let researcherToken;

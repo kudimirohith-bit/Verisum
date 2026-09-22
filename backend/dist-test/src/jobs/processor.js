@@ -8,6 +8,7 @@ const AuditLogger_js_1 = require("../audit/AuditLogger.js");
 const backends_js_1 = require("../summarizer/backends.js");
 const HierarchicalSummarizer_js_1 = require("../chunking/HierarchicalSummarizer.js");
 const index_js_1 = require("../verification/index.js");
+const errors_js_1 = require("../utils/errors.js");
 async function processSummarizationJob(jobId) {
     console.log(`[Worker Processor] Starting job ${jobId}`);
     // 1. Fetch the summarization job from database
@@ -124,7 +125,7 @@ async function processSummarizationJob(jobId) {
             jobId: job._id.toString(),
             payload: {
                 action: 'job_failed',
-                error: error.message,
+                error: (0, errors_js_1.getErrorMessage)(error),
             },
         });
         throw error;

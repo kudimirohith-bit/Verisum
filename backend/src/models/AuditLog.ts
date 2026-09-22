@@ -1,6 +1,6 @@
 import { Schema, model, Document as MongooseDoc, Types } from 'mongoose';
 
-export type AuditEventType = 'auth' | 'upload' | 'summarize' | 'verify' | 'review' | 'export';
+export type AuditEventType = 'auth' | 'upload' | 'summarize' | 'verify' | 'review' | 'export' | 'study_created';
 
 export interface IAuditLog extends MongooseDoc {
   _id: Types.ObjectId;
@@ -19,7 +19,7 @@ const AuditLogSchema = new Schema<IAuditLog>(
   {
     eventType: {
       type: String,
-      enum: ['auth', 'upload', 'summarize', 'verify', 'review', 'export'] as AuditEventType[],
+      enum: ['auth', 'upload', 'summarize', 'verify', 'review', 'export', 'study_created'] as AuditEventType[],
       required: true,
     },
     actorId: {

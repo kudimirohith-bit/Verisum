@@ -7,6 +7,7 @@ import { processSummarizationJob } from '../jobs/processor.js';
 import { enqueueSummarizationJob } from '../jobs/queue.js';
 import { AuditLogger } from '../audit/AuditLogger.js';
 import { validateBackendAccess } from '../config/deployment.js';
+import { getErrorMessage } from '../utils/errors.js';
 
 export const collectionsRouter = Router();
 
@@ -46,9 +47,9 @@ collectionsRouter.post('/', async (req: Request, res: Response): Promise<void> =
     });
 
     res.status(201).json({ message: 'Collection created successfully', collection });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating collection:', error);
-    res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: getErrorMessage(error) || 'Internal server error' });
   }
 });
 
@@ -75,9 +76,9 @@ collectionsRouter.get('/', async (req: Request, res: Response): Promise<void> =>
     );
 
     res.json({ collections: enrichedCollections });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error listing collections:', error);
-    res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: getErrorMessage(error) || 'Internal server error' });
   }
 });
 
@@ -98,9 +99,9 @@ collectionsRouter.get('/:id', async (req: Request, res: Response): Promise<void>
     });
 
     res.json({ collection, documents });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching collection:', error);
-    res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: getErrorMessage(error) || 'Internal server error' });
   }
 });
 
@@ -156,9 +157,9 @@ collectionsRouter.post('/:id/documents', async (req: Request, res: Response): Pr
       collection,
       documents: updatedDocuments,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error attaching documents to collection:', error);
-    res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: getErrorMessage(error) || 'Internal server error' });
   }
 });
 
@@ -226,8 +227,8 @@ collectionsRouter.post('/:id/summarize', async (req: Request, res: Response): Pr
       job: updatedJob,
       jobId: job._id.toString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error triggering collection summarization:', error);
-    res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: getErrorMessage(error) || 'Internal server error' });
   }
 });

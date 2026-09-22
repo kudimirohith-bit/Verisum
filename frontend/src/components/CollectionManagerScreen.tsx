@@ -8,6 +8,8 @@ import {
   getJobStatus,
   DocumentCollectionData,
   JobStatusResponse,
+  CollectionDetailsResponse,
+  getApiErrorMessage,
 } from '../api/client';
 import { SummaryReviewScreen } from './SummaryReviewScreen';
 import {
@@ -27,10 +29,7 @@ interface CollectionManagerScreenProps {
 export const CollectionManagerScreen: React.FC<CollectionManagerScreenProps> = ({ userRole }) => {
   const [collections, setCollections] = useState<DocumentCollectionData[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
-  const [activeCollectionDetails, setActiveCollectionDetails] = useState<{
-    collection: DocumentCollectionData;
-    documents: any[];
-  } | null>(null);
+  const [activeCollectionDetails, setActiveCollectionDetails] = useState<CollectionDetailsResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -61,7 +60,7 @@ export const CollectionManagerScreen: React.FC<CollectionManagerScreenProps> = (
       if (res.collections.length > 0 && !selectedCollectionId) {
         handleSelectCollection(res.collections[0]._id);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load collections', err);
     } finally {
       setIsLoading(false);
@@ -74,7 +73,7 @@ export const CollectionManagerScreen: React.FC<CollectionManagerScreenProps> = (
     try {
       const details = await fetchCollectionDetails(id);
       setActiveCollectionDetails(details);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch collection details', err);
     }
   };
@@ -94,10 +93,10 @@ export const CollectionManagerScreen: React.FC<CollectionManagerScreenProps> = (
       setStatusMessage({ type: 'success', text: `Collection "${res.collection.name}" created.` });
       await loadCollections();
       handleSelectCollection(res.collection._id);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err.response?.data?.message || 'Failed to create collection.',
+        text: getApiErrorMessage(err, 'Failed to create collection.'),
       });
     }
   };
@@ -133,10 +132,10 @@ export const CollectionManagerScreen: React.FC<CollectionManagerScreenProps> = (
         { filename: 'abstract_1_study.txt', text: '' },
         { filename: 'abstract_2_study.txt', text: '' },
       ]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err.response?.data?.message || 'Failed to attach documents.',
+        text: getApiErrorMessage(err, 'Failed to attach documents.'),
       });
     }
   };
@@ -155,10 +154,10 @@ export const CollectionManagerScreen: React.FC<CollectionManagerScreenProps> = (
       const jobRes = await getJobStatus(res.jobId);
       setActiveJobResult(jobRes);
       setStatusMessage({ type: 'success', text: 'Multi-document collection summarization completed!' });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err.response?.data?.message || 'Failed to summarize collection.',
+        text: getApiErrorMessage(err, 'Failed to summarize collection.'),
       });
     } finally {
       setIsSummarizing(false);

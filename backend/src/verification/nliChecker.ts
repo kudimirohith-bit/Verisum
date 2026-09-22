@@ -86,7 +86,7 @@ export class NLIConsistencyChecker implements ConsistencyChecker {
         neutralScore: neutral_score,
         verdict: verdict as 'entailment' | 'contradiction' | 'neutral',
       };
-    } catch (error: any) {
+    } catch {
       // Local fallback implementation if model-service is unavailable
       return this.localNLIFallback(premise, hypothesis);
     }

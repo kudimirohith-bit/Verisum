@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { SummarizerBackend, SummaryResult } from '../models/SummarizerBackend.js';
 import { getSecret } from '../config/secrets.js';
-import { validateBackendAccess } from '../config/deployment.js';
 
 // ── Mock Backend ───────────────────────────────────────────────────────────────
 export class MockBackend implements SummarizerBackend {
@@ -73,8 +72,9 @@ export class LocalModelServiceBackend implements SummarizerBackend {
         latencyMs: Date.now() - start,
         rawProviderResponse: response.data,
       };
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message;
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      const msg = axiosError.response?.data?.message || axiosError.message || 'Unknown error';
       console.warn(`[LocalModelService] HTTP call failed: ${msg}. Using local fallback.`);
 
       const sentences = text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
@@ -132,7 +132,7 @@ export class HostedLLMBackend implements SummarizerBackend {
 
     let attempts = 0;
     const maxAttempts = 3;
-    let lastError: any = null;
+    let lastError: Error | null = null;
 
     while (attempts < maxAttempts) {
       attempts++;
@@ -230,11 +230,12 @@ export class HostedLLMBackend implements SummarizerBackend {
             rawProviderResponse: response.data,
           };
         }
-      } catch (error: any) {
-        lastError = error;
-        const status = error.response?.status;
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        const axiosError = error as { response?: { status?: number }; message?: string };
+        const status = axiosError.response?.status;
         console.warn(
-          `[HostedLLM] Attempt ${attempts} failed (status: ${status}, msg: ${error.message})`,
+          `[HostedLLM] Attempt ${attempts} failed (status: ${status}, msg: ${lastError.message})`,
         );
 
         if (attempts < maxAttempts) {

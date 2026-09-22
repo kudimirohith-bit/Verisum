@@ -5,7 +5,7 @@ const mongoose_1 = require("mongoose");
 const AuditLogSchema = new mongoose_1.Schema({
     eventType: {
         type: String,
-        enum: ['auth', 'upload', 'summarize', 'verify', 'review', 'export'],
+        enum: ['auth', 'upload', 'summarize', 'verify', 'review', 'export', 'study_created'],
         required: true,
     },
     actorId: {

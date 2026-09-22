@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiClient } from '../api/client';
+import { apiClient, getApiErrorMessage } from '../api/client';
 import {
   BarChart2,
   Play,
@@ -74,7 +74,7 @@ export const BenchmarkDashboard: React.FC = () => {
       if (fetchedRuns.length > 0) {
         setActiveRun(fetchedRuns[0]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch benchmark runs', err);
     } finally {
       setIsLoading(false);
@@ -94,10 +94,10 @@ export const BenchmarkDashboard: React.FC = () => {
       setRuns((prev) => [newRun, ...prev]);
       setActiveRun(newRun);
       setMessage({ type: 'success', text: 'Benchmark suite completed successfully!' });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setMessage({
         type: 'error',
-        text: err.response?.data?.message || 'Failed to execute benchmark suite.',
+        text: getApiErrorMessage(err, 'Failed to execute benchmark suite.'),
       });
     } finally {
       setIsRunningBenchmark(false);
@@ -109,8 +109,8 @@ export const BenchmarkDashboard: React.FC = () => {
       const res = await apiClient.post('/benchmark/seed-synthetic-feedback');
       setMessage({ type: 'success', text: res.data.message });
       fetchBenchmarkRuns();
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to seed feedback.' });
+    } catch (err: unknown) {
+      setMessage({ type: 'error', text: getApiErrorMessage(err, 'Failed to seed feedback.') });
     }
   };
 
@@ -255,7 +255,7 @@ export const BenchmarkDashboard: React.FC = () => {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'leaderboard' | 'correlation' | 'report')}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition ${
                 activeTab === tab.id
                   ? 'border-indigo-600 text-indigo-600'

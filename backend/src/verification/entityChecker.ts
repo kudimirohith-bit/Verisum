@@ -12,7 +12,7 @@ export class EntityGroundingChecker implements ConsistencyChecker {
   async verifyClaims(
     claims: Claim[],
     sourceChunks: SourceChunk[],
-    config: VerificationConfig,
+    _config: VerificationConfig,
   ): Promise<ClaimVerificationResult[]> {
     const results: ClaimVerificationResult[] = [];
 

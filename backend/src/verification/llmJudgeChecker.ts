@@ -19,7 +19,7 @@ export class LLMJudgeChecker implements ConsistencyChecker {
   async verifyClaims(
     claims: Claim[],
     sourceChunks: SourceChunk[],
-    config: VerificationConfig,
+    _config: VerificationConfig,
   ): Promise<ClaimVerificationResult[]> {
     const results: ClaimVerificationResult[] = [];
 
@@ -63,7 +63,7 @@ Respond in 1 line: "Verdict: <entailment|contradiction|neutral> | Reason: <brief
           reason: `LLM-as-judge: ${text}`,
           strategy: 'llm_judge',
         });
-      } catch (err: any) {
+      } catch {
         results.push({
           claim,
           verdict: 'entailment',

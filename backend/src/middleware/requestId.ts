@@ -5,11 +5,9 @@ import crypto from 'node:crypto';
 // AsyncLocalStorage context to store requestId for the duration of an HTTP request
 export const requestIdStore = new AsyncLocalStorage<{ requestId: string }>();
 
-declare global {
-  namespace Express {
-    interface Request {
-      requestId?: string;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    requestId?: string;
   }
 }
 
