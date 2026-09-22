@@ -4,7 +4,6 @@ import { SummarizationJobModel } from '../models/SummarizationJob.js';
 import { DocumentModel } from '../models/Document.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { enqueueSummarizationJob } from './queue.js';
-import { processSummarizationJob } from './processor.js';
 import { logEvent } from '../auth/audit.js';
 import { validateBackendAccess } from '../config/deployment.js';
 import { BackendRegistry } from '../summarizer/backends.js';

@@ -52,11 +52,11 @@ benchmarkRouter.post(
         message: 'Benchmark run completed successfully.',
         benchmarkRun: run,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[Benchmark API] Benchmark execution failed:', error);
       res.status(500).json({
         error: 'BenchmarkError',
-        message: `Benchmark execution failed: ${error.message}`,
+        message: `Benchmark execution failed: ${(error as Error).message}`,
       });
     }
   },
@@ -74,8 +74,8 @@ benchmarkRouter.get(
     try {
       const runs = await BenchmarkRunModel.find({}).sort({ createdAt: -1 }).lean();
       res.json({ runs });
-    } catch (error: any) {
-      res.status(500).json({ error: 'DatabaseError', message: error.message });
+    } catch (error: unknown) {
+      res.status(500).json({ error: 'DatabaseError', message: (error as Error).message });
     }
   },
 );
@@ -96,8 +96,8 @@ benchmarkRouter.get(
         return;
       }
       res.json({ benchmarkRun: run });
-    } catch (error: any) {
-      res.status(500).json({ error: 'DatabaseError', message: error.message });
+    } catch (error: unknown) {
+      res.status(500).json({ error: 'DatabaseError', message: (error as Error).message });
     }
   },
 );
@@ -134,8 +134,8 @@ benchmarkRouter.get(
       res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="benchmark_report_${run._id}.md"`);
       res.send(run.reportMarkdown || '# Benchmark Report Empty');
-    } catch (error: any) {
-      res.status(500).json({ error: 'DatabaseError', message: error.message });
+    } catch (error: unknown) {
+      res.status(500).json({ error: 'DatabaseError', message: (error as Error).message });
     }
   },
 );
@@ -158,8 +158,8 @@ benchmarkRouter.get(
         correlationStats,
         evaluationPairs: pairs,
       });
-    } catch (error: any) {
-      res.status(500).json({ error: 'CalculationError', message: error.message });
+    } catch (error: unknown) {
+      res.status(500).json({ error: 'CalculationError', message: (error as Error).message });
     }
   },
 );
@@ -199,10 +199,9 @@ benchmarkRouter.post(
         const concisenessRating = 3 + (i % 3);
 
         try {
-          const synthReviewerId = new Types.ObjectId();
           await ClinicianFeedbackModel.create({
             summaryId: summary._id,
-            reviewerId: synthReviewerId,
+            reviewerId: new Types.ObjectId(),
             completenessRating,
             correctnessRating,
             concisenessRating,
@@ -215,8 +214,8 @@ benchmarkRouter.post(
       }
 
       res.json({ message: `Successfully seeded ${seededCount} synthetic clinician feedback documents.`, count: seededCount });
-    } catch (error: any) {
-      res.status(500).json({ error: 'SeedError', message: error.message });
+    } catch (error: unknown) {
+      res.status(500).json({ error: 'SeedError', message: (error as Error).message });
     }
   },
 );

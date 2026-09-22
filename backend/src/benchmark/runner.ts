@@ -19,7 +19,7 @@ import { BackendRegistry } from '../summarizer/backends.js';
 import { HierarchicalSummarizer } from '../chunking/HierarchicalSummarizer.js';
 import { VerificationPipeline } from '../verification/index.js';
 import { computeAutomaticMetrics, AutomaticMetrics } from './metrics.js';
-import { computeCorrelationStats, SummaryEvaluationPair, MetricHumanCorrelation } from './stats.js';
+import { computeCorrelationStats, SummaryEvaluationPair } from './stats.js';
 import { generateBenchmarkMarkdownReport, DisagreementCase } from './reportGenerator.js';
 import { AuditLogger } from '../audit/AuditLogger.js';
 

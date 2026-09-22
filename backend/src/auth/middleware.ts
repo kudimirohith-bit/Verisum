@@ -4,11 +4,9 @@ import { verifyToken, AccessTokenPayload } from './tokens.js';
 import type { UserRole } from '../models/User.js';
 
 // ── Augment Express Request ────────────────────────────────────────────────────
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AccessTokenPayload;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: AccessTokenPayload;
   }
 }
 

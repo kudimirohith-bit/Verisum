@@ -3,7 +3,7 @@ import { AuditLogModel, AuditEventType } from '../models/AuditLog.js';
 import { SummarizationJobModel } from '../models/SummarizationJob.js';
 import { SummaryModel } from '../models/Summary.js';
 import { ClinicianFeedbackModel } from '../models/ClinicianFeedback.js';
-import { DocumentModel } from '../models/Document.js';
+
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { AuditLogger } from './AuditLogger.js';
 
@@ -70,8 +70,8 @@ router.get(
         page: pageNum,
         pages,
       });
-    } catch (err: any) {
-      res.status(500).json({ error: 'AuditQueryError', message: err.message });
+    } catch (err: unknown) {
+      res.status(500).json({ error: 'AuditQueryError', message: (err as Error).message });
     }
   },
 );
@@ -139,8 +139,8 @@ router.get(
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', 'attachment; filename="verisumm_audit_export.json"');
       res.json(logs);
-    } catch (err: any) {
-      res.status(500).json({ error: 'AuditExportError', message: err.message });
+    } catch (err: unknown) {
+      res.status(500).json({ error: 'AuditExportError', message: (err as Error).message });
     }
   },
 );
@@ -286,8 +286,8 @@ router.get(
           flaggedRate: Number((d.flaggedRate * 100).toFixed(1)),
         })),
       });
-    } catch (err: any) {
-      res.status(500).json({ error: 'AuditMetricsError', message: err.message });
+    } catch (err: unknown) {
+      res.status(500).json({ error: 'AuditMetricsError', message: (err as Error).message });
     }
   },
 );

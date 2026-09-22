@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
-import fs from 'fs/promises';
+
 import { z } from 'zod';
 import { DocumentModel } from '../models/Document.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';

@@ -1,4 +1,4 @@
-import { TextChunker, Chunk, ChunkOptions, ChunkableDocument } from './TextChunker.js';
+import { TextChunker, Chunk, ChunkableDocument } from './TextChunker.js';
 import { SummarizerBackend } from '../models/SummarizerBackend.js';
 
 // ── Interfaces ─────────────────────────────────────────────────────────────────

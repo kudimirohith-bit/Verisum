@@ -1,7 +1,7 @@
 import { DocumentModel } from '../models/Document.js';
 import { SummarizationJobModel } from '../models/SummarizationJob.js';
 import { SummaryModel } from '../models/Summary.js';
-import { AuditLogModel } from '../models/AuditLog.js';
+
 import { AuditLogger } from '../audit/AuditLogger.js';
 import { BackendRegistry } from '../summarizer/backends.js';
 import { HierarchicalSummarizer } from '../chunking/HierarchicalSummarizer.js';

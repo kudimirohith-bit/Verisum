@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../auth/middleware.js';
 import { DocumentCollectionModel } from '../models/DocumentCollection.js';
-import { DocumentModel, DocType } from '../models/Document.js';
+import { DocumentModel } from '../models/Document.js';
 import { SummarizationJobModel } from '../models/SummarizationJob.js';
 import { processSummarizationJob } from '../jobs/processor.js';
 import { enqueueSummarizationJob } from '../jobs/queue.js';

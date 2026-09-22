@@ -5,7 +5,7 @@
  *   .docx — mammoth
  */
 
-import fs from 'fs/promises';
+
 import path from 'path';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';

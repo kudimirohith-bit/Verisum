@@ -35,7 +35,7 @@ export interface AutomaticMetrics {
 export interface MetricResult {
   name: string;
   score: number;
-  details?: Record<string, any>;
+  details?: Record<string, number>;
 }
 
 export interface MetricFn {
@@ -276,10 +276,15 @@ export async function computeAutomaticMetrics(
     const bert = await new BertScoreMetric().compute(summaryText, referenceText);
     const ent = await new EntityF1Metric().compute(summaryText, referenceText);
 
-    const rouge1: ScoreDetails = r1.details as any;
-    const rouge2: ScoreDetails = r2.details as any;
-    const rougeL: ScoreDetails = rL.details as any;
-    const bertScore: ScoreDetails = bert.details as any;
+    const toScoreDetails = (d?: Record<string, number>): ScoreDetails => ({
+      precision: d?.precision ?? 0,
+      recall: d?.recall ?? 0,
+      f1: d?.f1 ?? 0,
+    });
+    const rouge1: ScoreDetails = toScoreDetails(r1.details);
+    const rouge2: ScoreDetails = toScoreDetails(r2.details);
+    const rougeL: ScoreDetails = toScoreDetails(rL.details);
+    const bertScore: ScoreDetails = toScoreDetails(bert.details);
     const entityF1 = ent.score;
 
     const overall = Number(
