@@ -14,8 +14,8 @@
     "build:test": "tsc -p tsconfig.jest.json",
     "test": "npm run build:test && npm run test:unit && npm run test:integration",
     "test:unit": "node --max-old-space-size=256 dist-test/tests/chunking.runner.js",
-    "test:integration": "MONGOMS_VERSION=7.0.24 node --max-old-space-size=4096 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode|chunking|multilingual|studies'",
-    "test:coverage": "MONGOMS_VERSION=7.0.24 node --max-old-space-size=4096 ../node_modules/.bin/jest --runInBand --forceExit --coverage --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode|chunking|multilingual|studies'"
+    "test:integration": "npm run build:test && MONGOMS_VERSION=7.0.24 node --max-old-space-size=4096 ../node_modules/.bin/jest --runInBand --forceExit --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode|chunking|multilingual|studies'",
+    "test:coverage": "npm run build:test && MONGOMS_VERSION=7.0.24 node --max-old-space-size=4096 ../node_modules/.bin/jest --runInBand --forceExit --coverage --testPathPattern='models|auth|ingestion|jobs|verification|audit|benchmark|collections|deploymentMode|chunking|multilingual|studies'"
   },
   "dependencies": {
     "@verisumm/common": "*",
